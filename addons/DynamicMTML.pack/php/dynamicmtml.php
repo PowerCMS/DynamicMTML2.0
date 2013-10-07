@@ -85,17 +85,7 @@ class DynamicMTML {
             }
         }
         if (! isset( $blog ) ) {
-            // if (! $blog_id ) {
-            //     $blog_id = $this->stash( 'blog_id' );
-            // }
-            if (! $blog_id ) {
-                // $blog = $this->load( 'Blog',
-                //                      array( 'class' => 'website', 'blog' ),
-                //                      array( 'limit' => 1,
-                //                             'sort_order' => 'ascend',
-                //                             'sort' => 'id' ) );
-                // $blog_id = $blog->id;
-            } else {
+            if ( $blog_id ) {
                 if (! $this->no_database ) {
                     $blog = $mt->db()->fetch_blog( $blog_id );
                 }
@@ -108,7 +98,6 @@ class DynamicMTML {
             $ctx->stash( 'blog_id', $blog_id );
             $this->stash( 'blog', $blog );
             $this->stash( 'blog_id', $blog_id );
-
             $site_path = $blog->site_path();
             $self = $site_path;
             $templates_c = $self . DIRECTORY_SEPARATOR . 'templates_c';
@@ -118,35 +107,38 @@ class DynamicMTML {
             $templates_c = $self . DIRECTORY_SEPARATOR . 'templates_c';
             $cache = $self . DIRECTORY_SEPARATOR . 'cache';
         }
-        if (! is_dir( $templates_c ) ) {
-            if (! $this->stash( 'no_generate_directories' ) ) {
-                mkdir( $templates_c, 0755 );
-            }
-        }
-        $this->stash( 'templates_c', $templates_c );
         $cache = $self . DIRECTORY_SEPARATOR . 'cache';
-        if (! is_dir( $cache ) ) {
-            if (! $this->stash( 'no_generate_directories' ) ) {
-                mkdir( $cache, 0755 );
-            }
-        }
         $powercms_files_dir = NULL;
         if (! $powercms_files_dir = $mt->config( 'PowerCMSFilesDir' ) ) {
             $powercms_files_dir = dirname( $this->cfg_file ) . DIRECTORY_SEPARATOR . 'powercms_files';
         }
         $powercms_files_dir = rtrim( $powercms_files_dir, DIRECTORY_SEPARATOR );
-        if (! is_dir( $powercms_files_dir ) ) {
+        if (! $this->stash( 'generate_directories' ) ) {
             if (! $this->stash( 'no_generate_directories' ) ) {
-                mkdir( $powercms_files_dir, 0755 );
+                $bootstrapper_name = $this->config( 'DynamicSiteBootstrapper' );
+                $bootstrap_script = basename( $_SERVER[ 'PHP_SELF' ] );
+                if ( $bootstrapper_name === $bootstrap_script ) {
+                    $this->stash( 'generate_directories', 1 );
+                }
             }
         }
-        $this->stash( 'powercms_files_dir', $powercms_files_dir );
-        $powercms_cache = $powercms_files_dir . DIRECTORY_SEPARATOR . 'cache';
-        if (! is_dir( $powercms_cache ) ) {
-            if (! $this->stash( 'no_generate_directories' ) ) {
+        if ( $this->stash( 'generate_directories' ) ) {
+            if (! is_dir( $templates_c ) ) {
+                mkdir( $templates_c, 0755 );
+            }
+            if (! is_dir( $cache ) ) {
+                mkdir( $cache, 0755 );
+            }
+            if (! is_dir( $powercms_files_dir ) ) {
+                mkdir( $powercms_files_dir, 0755 );
+            }
+            $powercms_cache = $powercms_files_dir . DIRECTORY_SEPARATOR . 'cache';
+            if (! is_dir( $powercms_cache ) ) {
                 mkdir( $powercms_cache, 0755 );
             }
         }
+        $this->stash( 'templates_c', $templates_c );
+        $this->stash( 'powercms_files_dir', $powercms_files_dir );
         $language = $mt->config( 'DefaultLanguage' );
         $l10n_dir = $this->stash( 'l10n_dir' );
         if ( is_array( $l10n_dir ) ) {
@@ -552,14 +544,10 @@ class DynamicMTML {
         $template = $ctx->_get_compile_path( 'var:' . $basename );
         if (! isset( $data ) ) {
             $blog = $ctx->stash( 'blog' );
-            // if ( isset ( $blog ) ) {
-            //     $template = $blog->site_path() . DIRECTORY_SEPARATOR . $template;
-            // } else {
-                if (! $this->no_database ) {
-                    $ctx->force_compile = TRUE;
-                }
-                $template = dirname( $this->templates_c ) . DIRECTORY_SEPARATOR . $template;
-            // }
+            if (! $this->no_database ) {
+                $ctx->force_compile = TRUE;
+            }
+            $template = dirname( $this->templates_c ) . DIRECTORY_SEPARATOR . $template;
         }
         if ( $filemtime && file_exists( $template ) ) {
             if ( $filemtime > filemtime( $template ) ) {
@@ -1217,7 +1205,6 @@ class DynamicMTML {
             'mpeg'    => 'video/mpeg',
             'mpg'     => 'video/mpeg',
             'mpe'     => 'video/mpeg',
-            'qt'      => 'video/quicktime',
             'avi'     => 'video/x-msvideo',
             'movie'   => 'video/x-sgi-movie',
             'qt'      => 'video/quicktime',
@@ -1285,6 +1272,11 @@ class DynamicMTML {
             'xls'     => 'application/vnd.ms-excel',
             'xpm'     => 'image/x-pixmap',
             'xwd'     => 'image/x-xwindowdump',
+            'ico'     => 'image/vnd.microsoft.icon',
+            'docx'    => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'pptx'    => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'xlsx'    => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'json'    => 'application/json',
         );
         return isset( $mime_type[ $extension ] ) ? $mime_type[ $extension ] : 'text/plain';
     }
@@ -1744,7 +1736,18 @@ class DynamicMTML {
         }
         if ( isset( $client_author ) ) {
             $real_pass = $client_author->password;
-            $password = crypt( $password, $real_pass );
+            if ( strpos( $real_pass, '$6$' ) === 0 ) {
+                $real_pass = ltrim( $real_pass, '$6$' );
+                list ( $salt, $real_pass ) = explode( '$', $real_pass );
+                $digest = base64_encode( hash( 'sha512', $salt . $password, 1 ) );
+                $password = rtrim( $digest, '==' );
+            } elseif ( strpos( $real_pass, '{SHA}' ) === 0 ) {
+                $real_pass = ltrim( $real_pass, '{SHA}' );
+                list ( $salt, $real_pass ) = explode( '$', $real_pass );
+                $password = hash( 'sha1', $salt . $password );
+            } else {
+                $password = crypt( $password, $real_pass );
+            }
             if ( $real_pass === $password ) {
                 if ( isset( $permission ) ) {
                     if (! $this->can_do( $ctx, $permission, $client_author ) ) {
@@ -2069,7 +2072,6 @@ class DynamicMTML {
         if (! $type ) {
             $type = 'text/html';
         }
-//        if ( preg_match( '/IIS/', $_SERVER[ 'SERVER_SOFTWARE' ] ) ) {
         if ( $this->config( 'SendHTTPHeaderMethod' ) == 'echo' ) {
             $headers[] = "content-type: $type";
         } else {
@@ -2078,7 +2080,6 @@ class DynamicMTML {
         if ( $ts ) {
             $last_modified = gmdate( "D, d M Y H:i:s", $ts ) . ' GMT';
             $etag = '"' . md5( $last_modified ) . '"';
-//            if ( preg_match( '/IIS/', $_SERVER[ 'SERVER_SOFTWARE' ] ) ) {
             if ( $this->config( 'SendHTTPHeaderMethod' ) == 'echo' ) {
                 $headers[] = "Last-Modified: $last_modified";
                 $headers[] = "ETag: $etag";
@@ -2088,7 +2089,6 @@ class DynamicMTML {
             }
         }
         if ( $length ) {
-//            if ( preg_match( '/IIS/', $_SERVER[ 'SERVER_SOFTWARE' ] ) ) {
             if ( $this->config( 'SendHTTPHeaderMethod' ) == 'echo' ) {
                $headers[] = "Content-Length: $length";
             } else {
@@ -2250,11 +2250,6 @@ class DynamicMTML {
         }
         $entry->modified_on = $ts;
         $this->save( $entry );
-        // if ( $id ) {
-        //     $entry->Update();
-        // } else {
-        //     $entry->Save();
-        // }
         if ( $params && isset( $params[ 'categories' ] ) ) {
             $this->set_entry_categories( $entry, $params[ 'categories' ] );
         }
@@ -4438,10 +4433,37 @@ class DynamicMTML {
         return $ts;
     }
 
+    function strip_php( $source ) {
+        $tokens = token_get_all( $source );
+        $res = '';
+        $inphp = FALSE;
+        foreach ( $tokens as $token ) {
+            if ( is_string( $token ) ) {
+                $token = array( '', $token );
+            }
+            list( $id, $str ) = $token;
+            if (! $inphp ) {
+                if ( $id === T_OPEN_TAG or $id == T_OPEN_TAG_WITH_ECHO ) {
+                    $inphp = TRUE;
+                } else {
+                    $res .= $str;
+                }
+            } else {
+                if ( $id === T_CLOSE_TAG ) {
+                    $inphp = FALSE;
+                }
+            }
+        }
+        if ( $source !== $res ) {
+            $res = $this->strip_php( $res );
+        }
+        return $res;
+    }
+
     function non_dynamic_mtml ( $content ) {
-        $regex = '<\${0,1}mt:{0,1}DynamicMTML.*?>.*?<\/\${0,1}mt:{0,1}DynamicMTML.*?>';
+        $regex = '<mt:{0,1}DynamicMTML.*?>.*?<\/mt:{0,1}DynamicMTML.*?>';
         $content = preg_replace( "/$regex/is", '', $content );
-        $regex = '<\/{0,1}\${0,1}mt:{0,1}NonDynamicMTML.*?>';
+        $regex = '<\/{0,1}mt:{0,1}NonDynamicMTML.*?>';
         $content = preg_replace( "/$regex/is", '', $content );
         $regex = '<\/{0,1}\${0,1}mt:{0,1}.*?>';
         $content = preg_replace( "/$regex/is", '', $content );

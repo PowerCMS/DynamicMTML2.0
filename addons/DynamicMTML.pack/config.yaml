@@ -4,15 +4,15 @@ key:  dynamicmtml
 author_name: Alfasado Inc.
 author_link: http://alfasado.net/
 pack_link: https://github.com/movabletype/DynamicMTML
-version: 1.63
+version: 2.0(beta1)
 schema_version: 1.02
 l10n_class: DynamicMTML::L10N
 init_request: >
     sub {
         my $app = MT->instance;
-        my $ua = $app->get_header( 'User-Agent' );
-        unless ( ref $app eq 'MT::App::CMS' ) {
-            if ( $ua =~ /\ADoCoMo\/2\.0 /i ) {
+        if ( ref $app ne 'MT::App::CMS' ) {
+            my $ua = $app->get_header( 'User-Agent' ) || '';
+            if ( $ua =~ /\ADoCoMo\/2\.0 / ) {
                 $app->{ response_content_type } = 'application/xhtml+xml';
             }
         }
@@ -115,6 +115,7 @@ tags:
         BuildRecurs: $dynamicmtml::DynamicMTML::Tags::_hdlr_build_recurs
         SetErrorHandler: $dynamicmtml::DynamicMTML::Tags::_hdlr_set_error
         StripTags: $dynamicmtml::DynamicMTML::Tags::_hdlr_strip_tags
+        StripPHP: $dynamicmtml::DynamicMTML::Tags::_hdlr_strip_php
     function:
         ML: $dynamicmtml::DynamicMTML::Tags::_hdlr_raw_mtml_tag
         MTML: $dynamicmtml::DynamicMTML::Tags::_hdlr_raw_mtml_tag

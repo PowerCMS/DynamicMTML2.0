@@ -208,6 +208,9 @@
     }
     if ( isset( $mt ) ) {
         $ctx =& $mt->context();
+        if ( $app->config( 'DynamicGenerateDirectories' ) ) {
+            $app->stash( 'generate_directories', 1 );
+        }
         if (! $no_database ) {
             set_error_handler( array( &$mt, 'error_handler' ) );
             $driver = $app->config( 'objectdriver' );
@@ -231,8 +234,8 @@
         } else {
             $ctx->stash( 'no_database', 1 );
             $app->set_context( $mt, $ctx );
-            //$mt->init_plugins();
-            //require_once( 'init.dynamicmtml.php' );
+            // $mt->init_plugins();
+            // require_once( 'init.dynamicmtml.php' );
         }
         $mt->init_plugins();
         // TODO::Create Blog object.
@@ -257,8 +260,11 @@
     // ========================================
     // Search Cache
     // ========================================
-    $cache = $app->cache_filename( $blog_id, $file, $param );
-    $app->stash( 'cache', $cache );
+    $cache = $app->stash( 'cache' );
+    if (! $cache ) {
+        $cache = $app->cache_filename( $blog_id, $file, $param );
+        $app->stash( 'cache', $cache );
+    }
     $args[ 'cache' ] = $cache;
     if ( $use_cache && file_exists( $cache ) ) {
         require_once( $plugin_path . 'dynamicmtml.check_cache.php' );
@@ -311,6 +317,20 @@
                     ob_end_clean();
                 } else {
                     $text = file_get_contents( $file );
+                }
+            }
+            if (! $app->config( 'DynamicAllowPHPinTemplate' ) ) {
+                $text = $app->strip_php( $text );
+            }
+            $stripphp_block = '<mt:{0,1}StripPHP(?:\s.*?)?>(.*?)<\/mt:{0,1}StripPHP\s*>';
+            if ( preg_match_all( "/$stripphp_block/is", $text, $matchs ) ) {
+                $blocks = $matchs[ 0 ];
+                $inner_blocks = $matchs[ 1 ];
+                $counter = 0;
+                foreach ( $blocks as $match ) {
+                    $block = preg_quote( $match, '/' );
+                    $text = preg_replace( "/$block/", $app->strip_php( $inner_blocks[ $counter ] ), $text );
+                    $counter++;
                 }
             }
             $app->stash( 'text', $text );
