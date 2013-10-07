@@ -26,7 +26,7 @@
     }
     if (! file_exists ( $mt_dir . 'mt-config.cgi' ) ) {
         echo "mt-config.cgi was not found.\n";
-        return;
+        exit( 1 );
     }
     require_once ( $mt_dir . 'php' . DIRECTORY_SEPARATOR . 'mt.php' );
     require_once ( $mt_dir . 'addons' . DIRECTORY_SEPARATOR . 'DynamicMTML.pack' .

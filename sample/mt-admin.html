@@ -1,4 +1,8 @@
 <?php
+# DynamicMTML (C) 2010-2011 Alfasado Inc.
+# This program is distributed under the terms of the
+# GNU General Public License, version 2.
+
     global $mt;
     global $ctx;
     $ctx =& $mt->context();
@@ -14,7 +18,7 @@
     $original  =  NULL;
     $permalink =  NULL;
     $archives  =  array( 'Index', 'Category', 'Monthly' );
-    if ( strrpos( $mode, '_entries' ) === strlen($mode) - 8 ) {
+    if ( preg_match( '/_entries$/', $mode ) ) {
         $ids = $_POST[ 'ids' ];
         if ( $ids ) {
             if (! $app->validate_magic() ) {
@@ -80,8 +84,7 @@
             $entry = $app->load( 'Entry', $terms, array( 'limit' => 1 ) );
             if (! isset ( $entry ) ) {
                 return $ctx->error( $app->translate( 'Entry was not found.' ) );
-            }
-            if ( $entry->blog_id != $blog_id ) {
+            } elseif ( $entry->blog_id != $blog_id ) {
                 return $ctx->error( $app->translate( 'Invalid request.' ) );
             }
             if (! $app->can_edit_entry( $entry ) ) {
@@ -98,7 +101,7 @@
         if ( isset( $entry ) ) {
             $column_values = $app->column_values( $entry );
             foreach ( $column_values as $key => $val ) {
-                $key = ltrim( $key, 'entry_' );
+                $key = preg_replace( '/^entry_/', '', $key );
                 $vars[ $key ] = $val;
             }
             if ( $entry->status == 2 ) {
