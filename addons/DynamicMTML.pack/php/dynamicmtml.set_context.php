@@ -37,7 +37,7 @@
         require_once( 'archive_lib.php' );
         try {
             $archiver = ArchiverFactory::get_archiver( $at );
-        } catch ( Execption $e ) {
+        } catch ( Exception $e ) {
             $mt->http_errr = 404;
             header( 'HTTP/1.1 404 Not Found' );
             return $ctx->error(
@@ -72,7 +72,7 @@
         if (! $entry = $ctx->stash( 'entry' ) ) {
             if ( $at == 'Individual' ) {
                 $entry = $mt->db()->fetch_entry( $entry_id );
-            } elseif( $at == 'Page' ) {
+            } elseif ( $at == 'Page' ) {
                 $entry = $mt->db()->fetch_page( $entry_id );
             }
         }

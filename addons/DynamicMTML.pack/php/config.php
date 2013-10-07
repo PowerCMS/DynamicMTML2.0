@@ -19,6 +19,7 @@ class DynamicMTML_pack extends MTPlugin {
             'DynamicPHPFirst' => array( 'default' => 0 ),
             'DynamicAllowPHPinTemplate' => array( 'default' => 1 ),
             'DynamicGenerateDirectories' => array( 'default' => 1 ),
+            'DynamicConfigCacheFile' => array( 'default' => '' ),
         ),
         'settings' => array( // PluginSettings
             'example_setting' => array( 'default' => 1 ),
@@ -149,7 +150,7 @@ class DynamicMTML_pack extends MTPlugin {
             $extra = array( 'sort' => 'authored_on',
                             'direction' => 'descend',
                             'start_val' => $ts );
-            $entries = $app->load( 'Entry', 
+            $entries = $app->load( 'Entry',
                                    array( 'class' => array( 'entry', 'page' ),
                                           'status' => 4,
                                           'blog_id' => $blog->id ), $extra );
@@ -383,7 +384,7 @@ class DynamicMTML_pack extends MTPlugin {
         require_once( $this->tags_dir() . 'function.mtml.php' );
         return smarty_function_mtml( $args, $ctx );
     }
-    
+
     function mtrand ( $args, &$ctx ) {
         require_once( $this->tags_dir() . 'function.mtrand.php' );
         return smarty_function_mtrand( $args, $ctx );
