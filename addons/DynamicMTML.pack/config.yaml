@@ -45,6 +45,7 @@ config_settings:
     AllowableTags:
         default: '<a><br><b><i><p><strong><em><img><ul><ol><li><blockquote><pre>'
         updatable: 1
+    DynamicConfigCacheFile:
 object_types:
     blog:
         dynamic_mtml: boolean
@@ -90,6 +91,7 @@ callbacks:
     cms_post_save.template: $dynamicmtml::DynamicMTML::Plugin::_post_save_template
     MT::App::CMS::template_param.view_log: $dynamicmtml::DynamicMTML::Plugin::_view_log
     MT::App::CMS::template_param: $dynamicmtml::DynamicMTML::Plugin::_cb_tp
+    MT::Config::post_save: $dynamicmtml::DynamicMTML::Plugin::_cb_save_config
 tags:
     block:
         RawMTML: $dynamicmtml::DynamicMTML::Tags::_hdlr_raw_mtml

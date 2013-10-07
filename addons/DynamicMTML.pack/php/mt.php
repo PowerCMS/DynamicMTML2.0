@@ -357,6 +357,7 @@ class MT {
         if (isset($cfg['allowconnectotherdb'])){ //
             return 1; //
         } //
+        /*  Cache config //
         $mtdb =& $this->db();
         $db_config = $mtdb->fetch_config();
         if ($db_config) {
@@ -366,10 +367,33 @@ class MT {
             }
             $mtdb->set_names($this);
         }
-
+        */
+        $cfg_cache = $cfg['dynamicconfigcachefile']; //
+        if ($cfg_cache && file_exists($cfg_cache)) { //
+            $ser = file_get_contents($cfg_cache); //
+            $data = unserialize($ser); //
+        } else { //
+            $mtdb =& $this->db(); //
+            $db_config = $mtdb->fetch_config(); //
+            $data = $db_config->data(); //
+            if ( $cfg_cache ) { //
+                $ser = serialize($data); //
+                file_put_contents( $cfg_cache, $ser ); //
+            } //
+        } //
+        foreach ($data as $key => $value) {
+            $cfg[$key] = $value;
+            if ( $key == 'debugmode' ) { //
+                if ($value && intval($value)) { //
+                    $this->debugging = true; //
+                } //
+            } //
+        } //
+        /* Move to foreach //
         if ( !empty( $cfg['debugmode'] ) && intval($cfg['debugmode']) > 0 ) {
             $this->debugging = true;
         }
+        */
     }
 
     function config_defaults() {

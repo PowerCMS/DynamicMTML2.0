@@ -575,4 +575,14 @@ sub _cb_tp {
     }
 }
 
+sub _cb_save_config {
+    if ( my $config_cache = MT->config( 'DynamicConfigCacheFile' ) ) {
+        require MT::FileMgr;
+        my $fmgr = MT::FileMgr->new( 'Local' ) or die MT::FileMgr->errstr;
+        if ( $fmgr->exists( $config_cache ) ) {
+            $fmgr->delete( $config_cache );
+        }
+    }
+}
+
 1;
