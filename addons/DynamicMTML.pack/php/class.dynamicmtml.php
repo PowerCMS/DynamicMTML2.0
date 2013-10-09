@@ -157,7 +157,7 @@ class DynamicMTML {
                 }
             }
         }
-        if (! function_exists( 'is_valid_email' ) ) {
+        if (! function_exists( 'offset_time' ) ) {
             require_once( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . 'mt_util.php' );
         }
     }

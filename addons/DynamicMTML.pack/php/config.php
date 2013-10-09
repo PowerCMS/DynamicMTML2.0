@@ -216,25 +216,25 @@ class DynamicMTML_pack extends MTPlugin {
             $data = $app->stash( 'fileinfo' );
             if (! $data ) return;
             $prefix = $this->app->cache_prefix;
+            $objects = $app->stash( 'cfg_cache_objects' );
             if (! $app->stash( 'using_cached_fileinfo' ) ) {
                 $file = md5( $app->stash( 'file' ) );
                 $key = "${prefix}_fileinfo_" . $file;
                 $driver->set( $key, $data );
-            }
-            $objects = $app->stash( 'cfg_cache_objects' );
-            // TODO::author logged in
-            foreach ( $objects as $obj ) {
-                $col = strtolower( "${obj}_id" );
-                if ( $object_id = $data->$col ) {
-                    $obj = strtolower( $obj );
-                    require_once( "class.mt_${obj}.php" );
-                    $class = ucfirst( $obj );
-                    $object = new $class;
-                    $object->Load( "${col} = $object_id" );
-                    if ( $object && is_object( $object ) ) {
-                        $key = "${prefix}_${obj}_" . $object_id;
-                        $ctx->stash( $obj, $object );
-                        $driver->set( $key, $object );
+                // TODO::author logged in
+                foreach ( $objects as $obj ) {
+                    $col = strtolower( "${obj}_id" );
+                    if ( $object_id = $data->$col ) {
+                        $obj = strtolower( $obj );
+                        require_once( "class.mt_${obj}.php" );
+                        $class = ucfirst( $obj );
+                        $object = new $class;
+                        $object->Load( "${col} = $object_id" );
+                        if ( $object && is_object( $object ) ) {
+                            $key = "${prefix}_${obj}_" . $object_id;
+                            $ctx->stash( $obj, $object );
+                            $driver->set( $key, $object );
+                        }
                     }
                 }
             }

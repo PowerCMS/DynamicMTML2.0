@@ -19,7 +19,7 @@ function spam_protect ( $str ) {
 
 function offset_time ( $ts, $blog = NULL, $dir = NULL ) {
     if ( isset( $blog ) ) {
-        if (! is_array( $blog ) ) {
+        if (! is_object( $blog ) ) {
             global $mt;
             $blog = $mt->db()->fetch_blog( $blog->id );
         }
