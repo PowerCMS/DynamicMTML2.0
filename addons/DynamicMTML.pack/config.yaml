@@ -61,6 +61,7 @@ config_settings:
     DynamicMemcachedPort:
         default: 11211
         updatable: 1
+    DynamicMemcachedCompressed:
 object_types:
     blog:
         dynamic_mtml: boolean
