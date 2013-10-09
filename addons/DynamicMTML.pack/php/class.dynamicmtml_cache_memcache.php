@@ -22,6 +22,7 @@ class DynamicCacheMemcache extends DynamicCache {
         $this->compressed = $compressed;
         $memcache->connect( $server, $port );
         $this->memcache = $memcache;
+        // $this->clear( NULL, 'DEBUG' );
         // $version = $memcache->getVersion();
     }
 

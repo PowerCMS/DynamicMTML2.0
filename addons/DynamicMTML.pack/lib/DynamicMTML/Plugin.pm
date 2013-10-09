@@ -221,7 +221,7 @@ sub _post_save_author {
     if ( my $driver = MT->config( 'DynamicCacheDriver' ) ) {
         my $prefix = MT->config( 'DynamicCachePrefix' );
         my $key = $prefix . '_author_' . $obj->id;
-        _clear_dynamic_cache( $driver, $key );
+        _clear_dynamic_cache( $key );
     }
     return 1;
 }
@@ -245,7 +245,7 @@ sub _post_save_blog {
         if ( my $driver = MT->config( 'DynamicCacheDriver' ) ) {
             my $prefix = MT->config( 'DynamicCachePrefix' );
             my $key = $prefix . '_blog_' . $obj->id;
-            _clear_dynamic_cache( $driver, $key );
+            _clear_dynamic_cache( $key );
         }
         require File::Spec;
         require MT::Template;
@@ -386,7 +386,7 @@ sub _post_save_template {
     if ( my $driver = MT->config( 'DynamicCacheDriver' ) ) {
         my $prefix = MT->config( 'DynamicCachePrefix' );
         my $key = $prefix . '_template_' . $obj->id;
-        _clear_dynamic_cache( $driver, $key );
+        _clear_dynamic_cache( $key );
     }
     return 1;
 }
@@ -624,14 +624,15 @@ sub _cb_post_change {
             } else {
                 $key = $prefix . '_' . $target . '_' . $obj->id;
             }
-            _clear_dynamic_cache( $driver, $key );
+            _clear_dynamic_cache( $key );
         }
     }
     return 1;
 }
 
 sub _clear_dynamic_cache {
-    my ( $driver, $key ) = @_;
+    my $key = shift;
+    my $driver = MT->config( 'DynamicCacheDriver' );
     if ( lc( $driver ) eq 'file' ) {
         require File::Spec;
         my $cache = File::Spec->catdir( powercms_files_dir_path(), 'cache', $key );
