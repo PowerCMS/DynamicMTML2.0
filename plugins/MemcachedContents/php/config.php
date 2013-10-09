@@ -21,6 +21,9 @@ class MemcachedContents extends MTPlugin {
     function configure_from_db ( $mt, $ctx, $args, $cfg ) {
         if ( isset( $cfg[ 'dynamiccachedriver' ] ) ){
             $app = $this->app;
+            if ( $app->request_method !== 'GET' ) {
+                return TRUE;
+            }
             $cachedriver = strtolower( $cfg[ 'dynamiccachedriver' ] );
             $pos = strpos( $cachedriver, 'memcache' );
             if ( $pos === FALSE ) return TRUE;
