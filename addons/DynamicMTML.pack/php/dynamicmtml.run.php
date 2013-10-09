@@ -168,6 +168,7 @@
     $script = preg_replace( '!(^.*?/)([^/]*$)!', '$2', $request );
     if ( file_exists( $file ) ) {
         $orig_mtime = filemtime( $file );
+        $app->stash( 'filemtime', $orig_mtime );
     }
     // ========================================
     // Include DPAPI

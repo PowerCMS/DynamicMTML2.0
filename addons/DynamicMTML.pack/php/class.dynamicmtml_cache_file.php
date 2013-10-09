@@ -13,13 +13,14 @@ class DynamicCacheFile extends DynamicCache {
         $this->prefix = $app->config( 'DynamicCachePrefix' );
     }
 
-    function get ( $key ) {
+    function get ( $key, $ttl = NULL ) {
+        if (! $ttl ) $ttl = $this->ttl;
         $cache_dir = $this->cache_dir;
         $file = __cat_file( $cache_dir, $key );
         if (! file_exists( $file ) ) {
             return FALSE;
         }
-        if ( $ttl = $this->ttl ) {
+        if ( $ttl ) {
             if ( ( time() - filemtime( $file ) ) > $ttl ) {
                 unlink ( $file );
                 return FALSE;

@@ -16,7 +16,7 @@ class DynamicCache extends DynamicMTML {
         $app->cache_driver = $this;
     }
 
-    function get ( $key ) {
+    function get ( $key, $ttl = NULL ) {
         $value = $this->driver->get( $key );
         $type = gettype( $value );
         if ( $type === 'array' ) {
@@ -55,8 +55,8 @@ class DynamicCache extends DynamicMTML {
         return $value;
     }
 
-    function set ( $key, $value ) {
-        $this->driver->set( $key, $value );
+    function set ( $key, $value, $ttl = NULL ) {
+        $this->driver->set( $key, $value, $ttl );
     }
 
     function remove ( $key ) {

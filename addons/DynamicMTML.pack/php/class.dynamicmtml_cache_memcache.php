@@ -26,7 +26,7 @@ class DynamicCacheMemcache extends DynamicCache {
         // $version = $memcache->getVersion();
     }
 
-    function get ( $key ) {
+    function get ( $key, $ttl = NULL ) {
         return $this->memcache->get( $key );
     }
 

@@ -117,16 +117,19 @@ class DynamicMTML_pack extends MTPlugin {
 
     // Callbacks
     function configure_from_db ( &$mt, $ctx, $args, $cfg ) {
-        $cfg =& $mt->config;
+        // $cfg =& $mt->config;
         if ( isset( $cfg[ 'allowconnectotherdb' ] ) ){
             return FALSE;
         }
         if ( isset( $cfg[ 'dynamiccachedriver' ] ) ){
-            $driver = strtolower( $cfg[ 'dynamiccachedriver' ] );
-            require_once( 'class.dynamicmtml_cache.php' );
+            $cachedriver = strtolower( $cfg[ 'dynamiccachedriver' ] );
+            $driver = NULL;
             $this->app->mt = $mt;
-            $driver = new DynamicCache( $this->app, $driver );
-            $this->app->cache_driver = $driver;
+            if (! $driver = $this->app->cache_driver ) {
+                require_once( 'class.dynamicmtml_cache.php' );
+                $driver = new DynamicCache( $this->app, $cachedriver );
+                $this->app->cache_driver = $driver;
+            }
             $prefix = $this->app->config( 'DynamicCachePrefix' );
             $this->app->cache_prefix = $prefix;
             $key = "${prefix}_config";
