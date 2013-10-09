@@ -1,4 +1,5 @@
 <?php
+/* Backward compatibility */
     $mtime = filemtime( $cache );
     if ( ( $ctime - $mtime ) > $server_cache ) {
         unlink( $cache );

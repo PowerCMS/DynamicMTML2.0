@@ -214,7 +214,8 @@ function regex_not_tag ( $phrase ) {
 function make_seo_basename ( $phrase, $length = NULL ) {
     $invalid  = preg_quote( '\'"|*`^><)(}{][,/! ', '/' );
     $phrase = preg_replace( "/[$invalid]/", '_', $phrase );
-    $phrase = trim( $phrase, '_' );
+    $phrase = preg_replace( '/^_*/', '', $phrase );
+    $phrase = preg_replace( '/_*$/', '', $phrase );
     if ( $length ) {
         if ( extension_loaded( 'mbstring' ) ) {
             $phrase = mb_substr( $phrase, 0, $length );
@@ -341,8 +342,11 @@ function __is_hash ( &$array ) {
 }
 
 function __cat_file ( $dir, $path = NULL ) {
+    $directory_separator = preg_quote( '/', DIRECTORY_SEPARATOR );
     if (! is_array( $dir ) ) {
-        $dir = rtrim( $dir, DIRECTORY_SEPARATOR );
+        if ( preg_match( "/$directory_separator$/", $dir ) ) {
+            $dir = preg_replace( "/$directory_separator$/", '', $dir );
+        }
     } else {
         $directory = '';
         foreach ( $dir as $item ) {
@@ -353,8 +357,10 @@ function __cat_file ( $dir, $path = NULL ) {
     }
     if ( isset( $path ) ) {
         if (! is_array( $path ) ) {
-            $path = rtrim( $path, DIRECTORY_SEPARATOR );
-            return $dir . DIRECTORY_SEPARATOR . $path;
+            if ( preg_match( "/$directory_separator$/", $path ) ) {
+                $path = preg_replace( "/$directory_separator$/", '', $path );
+            }
+            return $dir. DIRECTORY_SEPARATOR. $path;
         } else {
             foreach ( $path as $item ) {
                 $dir .= DIRECTORY_SEPARATOR . $item;
@@ -425,11 +431,11 @@ function convert2thumbnail ( $text, $type = 'auto', $embed_px,
     $blog = $ctx->stash( 'blog' );
     $separator = DIRECTORY_SEPARATOR;
     $site_path = $blog->archive_path();
-    $site_path = rtrim( $site_path, $separator );
-    if (! $site_path || $site_path === $separator ) {
+    $site_path = preg_replace( "!$separator$!", '', $site_path );
+    if (! $site_path || $site_path == $separator ) {
         $site_path = $blog->site_path();
     }
-    $site_path = rtrim( $site_path, $separator );
+    $site_path = preg_replace( "!$separator$!", '', $site_path );
     $site_url  = $blog->site_url();
     $site_url  = preg_replace( '{/+$}', '', $site_url );
     $search_path = quotemeta( $site_url );

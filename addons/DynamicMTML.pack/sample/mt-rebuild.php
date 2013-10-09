@@ -30,7 +30,7 @@
     }
     require_once ( $mt_dir . 'php' . DIRECTORY_SEPARATOR . 'mt.php' );
     require_once ( $mt_dir . 'addons' . DIRECTORY_SEPARATOR . 'DynamicMTML.pack' .
-                   DIRECTORY_SEPARATOR . 'php' . DIRECTORY_SEPARATOR . 'dynamicmtml.php' );
+                   DIRECTORY_SEPARATOR . 'php' . DIRECTORY_SEPARATOR . 'class.dynamicmtml.php' );
     $mt_config = $mt_dir . 'mt-config.cgi';
     $app = new DynamicMTML();
     $app->configure( $mt_config );

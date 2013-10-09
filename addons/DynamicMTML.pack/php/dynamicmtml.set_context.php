@@ -1,4 +1,5 @@
 <?php
+/* Backward compatibility */
     $fi_path = $data->fileinfo_url;
     $fid = $data->id;
     $at = $data->archive_type;

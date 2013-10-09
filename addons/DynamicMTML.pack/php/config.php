@@ -1,7 +1,7 @@
 <?php
 class DynamicMTML_pack extends MTPlugin {
-    var $app;
-    var $registry = array(
+    public $app;
+    public $registry = array(
         'name' => 'DynamicMTML',
         'id'   => 'DynamicMTML',
         'key'  => 'dynamicmtml',
@@ -19,7 +19,12 @@ class DynamicMTML_pack extends MTPlugin {
             'DynamicPHPFirst' => array( 'default' => 0 ),
             'DynamicAllowPHPinTemplate' => array( 'default' => 1 ),
             'DynamicGenerateDirectories' => array( 'default' => 1 ),
-            'DynamicConfigCacheFile' => array( 'default' => '' ),
+            'DynamicCacheDriver' => array( 'default' => '' ),
+            'DynamicCachePrefix' => array( 'default' => 'dynamicmtmlcache' ),
+            'DynamicCacheTTL' => array( 'default' => 7200 ),
+            'DynamicCacheObjects' => array( 'default' => 'template,category' ),
+            'DynamicMemcachedServer' => array( 'default' => 'localhost' ),
+            'DynamicMemcachedPort' => array( 'default' => 11211 ),
         ),
         'settings' => array( // PluginSettings
             'example_setting' => array( 'default' => 1 ),
@@ -96,8 +101,12 @@ class DynamicMTML_pack extends MTPlugin {
                                    'class' => 'MT::Worker::Publish', ),
         ),
         'callbacks' => array( // Callbacks
-            'build_page' => 'filter_build_page',
-            'post_init'  => 'post_init_routine',
+            'configure_from_db' => 'configure_from_db',
+            'post_configure_from_db' => 'post_configure_from_db',
+            'post_init' => 'post_init',
+            'init_db' => 'init_db',
+            'pre_resolve_url' => 'pre_resolve_url',
+            'post_resolve_url' => 'post_resolve_url',
         ),
     );
 
@@ -106,12 +115,129 @@ class DynamicMTML_pack extends MTPlugin {
     }
 
     // Callbacks
-    function post_init_routine ( $mt, &$ctx ) {
-        return 1;
+    function configure_from_db ( &$mt, $ctx, $args, $cfg ) {
+        $cfg =& $mt->config;
+        if ( isset( $cfg[ 'allowconnectotherdb' ] ) ){
+            return FALSE;
+        }
+        if ( isset( $cfg[ 'dynamiccachedriver' ] ) ){
+            $driver = strtolower( $cfg[ 'dynamiccachedriver' ] );
+            require_once( 'class.dynamicmtml_cache.php' );
+            $this->app->mt = $mt;
+            $driver = new DynamicCache( $this->app, $driver );
+            $this->app->cache_driver = $driver;
+            $prefix = $this->app->config( 'DynamicCachePrefix' );
+            $this->app->cache_prefix = $prefix;
+            $key = "${prefix}_config";
+            $data = $driver->get( $key );
+            if ( is_array( $data ) ) {
+                foreach ( $data as $key => $value ) {
+                    $cfg[ $key ] = $value;
+                    if ( $key == 'debugmode' ) {
+                        if ( $value && intval( $value ) ) {
+                            $mt->debugging = TRUE;
+                        }
+                    }
+                }
+                return FALSE;
+            }
+        }
+        return TRUE;
     }
 
-    function filter_build_page ( $mt, &$ctx, &$args, &$content ) {
-        return 1;
+    function post_configure_from_db ( $mt, $ctx, $args, $db_config ) {
+        if ( $driver = $this->app->cache_driver ) {
+            $cfg =& $mt->config;
+            $driver = $this->app->cache_driver;
+            $prefix = $this->app->cache_prefix;
+            $key = "${prefix}_config";
+            $driver->set( $key, $db_config->data() );
+        }
+    }
+
+    function post_init ( $mt, &$ctx, $args ) {
+        if ( $driver = $this->app->cache_driver ) {
+            $cfg = $mt->config;
+            $prefix = $this->app->cache_prefix;
+            $key = "${prefix}_blog_" . $args[ 'blog_id' ];
+            if ( $this->app->stash( 'cached_' . $key ) ) {
+                return;
+            }
+            if ( $blog = $ctx->stash( 'blog' ) ) {
+                $driver->set( $key, $blog );
+            }
+        }
+    }
+
+    function init_db ( $mt, &$ctx, $args ) {
+        if ( $driver = $this->app->cache_driver ) {
+            $prefix = $this->app->cache_prefix;
+            $key = "${prefix}_blog_" . $args[ 'blog_id' ];
+            $blog = $driver->get( $key );
+            if ( $blog && is_object( $blog ) ) {
+                $ctx->stash( 'blog', $blog );
+                $this->app->stash( 'cached_' . $key, 1 );
+            }
+        }
+    }
+
+    function pre_resolve_url ( $mt, $ctx, $args ) {
+        if ( $driver = $this->app->cache_driver ) {
+            $app = $this->app;
+            $cfg_objects = $app->config( 'DynamicCacheObjects' );
+            if ( $objects = explode( ',', $cfg_objects ) ) {
+                $app->stash( 'cfg_cache_objects', $objects );
+            }
+            $file = md5( $app->stash( 'file' ) );
+            $prefix = $this->app->cache_prefix;
+            $key = "${prefix}_fileinfo_" . $file;
+            $data = $driver->get( $key );
+            if (! $data ) return;
+            $app->stash( 'using_cached_fileinfo', 1 );
+            $app->stash( 'fileinfo', $data );
+            if (! $cfg_objects ) return;
+            // TODO::author logged in
+            foreach ( $objects as $obj ) {
+                $col = strtolower( "${obj}_id" );
+                if ( $object_id = $data->$col ) {
+                    $key = "${prefix}_${obj}_" . $object_id;
+                    if ( $object = $driver->get( $key ) ) {
+                        $ctx->stash( $obj, $object );
+                    }
+                }
+            }
+        }
+    }
+
+    function post_resolve_url ( $mt, $ctx, $args ) {
+        if ( $driver = $this->app->cache_driver ) {
+            $app = $this->app;
+            $data = $app->stash( 'fileinfo' );
+            if (! $data ) return;
+            $prefix = $this->app->cache_prefix;
+            if (! $app->stash( 'using_cached_fileinfo' ) ) {
+                $file = md5( $app->stash( 'file' ) );
+                $key = "${prefix}_fileinfo_" . $file;
+                $driver->set( $key, $data );
+            }
+            $objects = $app->stash( 'cfg_cache_objects' );
+            // TODO::author logged in
+            foreach ( $objects as $obj ) {
+                $col = strtolower( "${obj}_id" );
+                if ( $object_id = $data->$col ) {
+                    $obj = strtolower( $obj );
+                    require_once( "class.mt_${obj}.php" );
+                    $class = ucfirst( $obj );
+                    $object = new $class;
+                    $object->Load( "${col} = $object_id" );
+                    if ( $object && is_object( $object ) ) {
+                        $key = "${prefix}_${obj}_" . $object_id;
+                        $ctx->stash( $obj, $object );
+                        $driver->set( $key, $object );
+                    }
+                }
+            }
+        }
     }
 
     // Tasks

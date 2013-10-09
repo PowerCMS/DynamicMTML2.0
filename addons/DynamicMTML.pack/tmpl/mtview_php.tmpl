@@ -1,8 +1,5 @@
 <?php
-## DynamicMTML generated this part; don't remove this line! ##
 
-# DynamicMTML (C) 2010-2011 Alfasado Inc.
-    
     // ini_set( 'memory_limit', '16M' );
     // <version><$MTPluginVersion component="DynamicMTML"$></version>
     
@@ -26,7 +23,7 @@
     <mt:If name="requires_login">$require_login = 1;<mt:Else>$require_login = NULL;</mt:Else></mt:If>
     <mt:IfBlogDynamicCache>$dynamic_caching = 1;<mt:Else>$dynamic_caching = NULL;</mt:Else></mt:IfBlogDynamicCache>
     <mt:IfBlogDynamicConditional>$dynamic_conditional = 1;<mt:Else>$dynamic_conditional = NULL;</mt:Else></mt:IfBlogDynamicConditional>
-    // require_once ( $plugin_path . 'dynamicmtml.php' );
+    // require_once ( $plugin_path . 'class.dynamicmtml.php' );
     // require_once ( $plugin_path . 'dynamicmtml.util.php' );
     require_once ( $plugin_path . 'dynamicmtml.run.php' );
 

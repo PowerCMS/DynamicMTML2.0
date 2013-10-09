@@ -3,7 +3,7 @@
 
 if (! isset( $app ) ) {
 
-    require_once ( $plugin_path . 'dynamicmtml.php' );
+    require_once ( $plugin_path . 'class.dynamicmtml.php' );
     require_once ( $plugin_path . 'dynamicmtml.util.php' );
     $app = new DynamicMTML();
     $ctx =& $mt->context();

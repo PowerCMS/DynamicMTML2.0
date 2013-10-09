@@ -3,8 +3,8 @@ id:   DynamicMTML
 key:  dynamicmtml
 author_name: Alfasado Inc.
 author_link: http://alfasado.net/
-pack_link: https://github.com/movabletype/DynamicMTML
-version: 2.0(beta1)
+pack_link: https://github.com/PowerCMS/DynamicMTML
+version: 2.0(beta2)
 schema_version: 1.02
 l10n_class: DynamicMTML::L10N
 init_request: >
@@ -45,7 +45,22 @@ config_settings:
     AllowableTags:
         default: '<a><br><b><i><p><strong><em><img><ul><ol><li><blockquote><pre>'
         updatable: 1
-    DynamicConfigCacheFile:
+    DynamicCacheDriver:
+    DynamicCachePrefix:
+        default: dynamicmtmlcache
+        updatable: 1
+    DynamicCacheTTL:
+        default: 7200
+        updatable: 1
+    DynamicCacheObjects:
+        default: template,category
+        updatable: 1
+    DynamicMemcachedServer:
+        default: localhost
+        updatable: 1
+    DynamicMemcachedPort:
+        default: 11211
+        updatable: 1
 object_types:
     blog:
         dynamic_mtml: boolean
@@ -88,10 +103,24 @@ callbacks:
           priority: 10
         - handler: $dynamicmtml::DynamicMTML::Plugin::_disable_dynamicmtml
           priority: 1
-    cms_post_save.template: $dynamicmtml::DynamicMTML::Plugin::_post_save_template
+    MT::Entry::post_save: $dynamicmtml::DynamicMTML::Plugin::_cb_post_change
+    MT::Entry::post_remove: $dynamicmtml::DynamicMTML::Plugin::_cb_post_change
+    MT::Page::post_save: $dynamicmtml::DynamicMTML::Plugin::_cb_post_change
+    MT::Page::post_remove: $dynamicmtml::DynamicMTML::Plugin::_cb_post_change
+    cms_post_save.author: $dynamicmtml::DynamicMTML::Plugin::_post_save_author
+    api_post_save.author: $dynamicmtml::DynamicMTML::Plugin::_post_save_author
+    cms_post_delete.author: $dynamicmtml::DynamicMTML::Plugin::_post_save_author
     MT::App::CMS::template_param.view_log: $dynamicmtml::DynamicMTML::Plugin::_view_log
     MT::App::CMS::template_param: $dynamicmtml::DynamicMTML::Plugin::_cb_tp
-    MT::Config::post_save: $dynamicmtml::DynamicMTML::Plugin::_cb_save_config
+    MT::Config::post_save: $dynamicmtml::DynamicMTML::Plugin::_cb_post_change
+    MT::FileInfo::post_save: $dynamicmtml::DynamicMTML::Plugin::_cb_post_change
+    MT::FileInfo::post_remove: $dynamicmtml::DynamicMTML::Plugin::_cb_post_change
+    MT::Template::post_save: $dynamicmtml::DynamicMTML::Plugin::_cb_post_change
+    MT::Template::post_remove: $dynamicmtml::DynamicMTML::Plugin::_cb_post_change
+    MT::Category::post_save: $dynamicmtml::DynamicMTML::Plugin::_cb_post_change
+    MT::Category::post_remove: $dynamicmtml::DynamicMTML::Plugin::_cb_post_change
+    MT::Folder::post_save: $dynamicmtml::DynamicMTML::Plugin::_cb_post_change
+    MT::Folder::post_remove: $dynamicmtml::DynamicMTML::Plugin::_cb_post_change
 tags:
     block:
         RawMTML: $dynamicmtml::DynamicMTML::Tags::_hdlr_raw_mtml

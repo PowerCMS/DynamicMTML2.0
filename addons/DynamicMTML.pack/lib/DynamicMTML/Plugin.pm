@@ -216,6 +216,15 @@ sub _disable_dynamicmtml {
     }
     return 1;
 }
+sub _post_save_author {
+    my ( $cb, $app, $obj, $original ) = @_;
+    if ( my $driver = MT->config( 'DynamicCacheDriver' ) ) {
+        my $prefix = MT->config( 'DynamicCachePrefix' );
+        my $key = $prefix . '_author_' . $obj->id;
+        _clear_dynamic_cache( $driver, $key );
+    }
+    return 1;
+}
 
 sub _post_save_blog {
     my ( $cb, $app, $obj, $original ) = @_;
@@ -232,6 +241,11 @@ sub _post_save_blog {
             unless ( my $powercms_files_dir = powercms_files_dir() ) {
                 $app->add_return_arg( no_search_cache_path => 1 );
             }
+        }
+        if ( my $driver = MT->config( 'DynamicCacheDriver' ) ) {
+            my $prefix = MT->config( 'DynamicCachePrefix' );
+            my $key = $prefix . '_blog_' . $obj->id;
+            _clear_dynamic_cache( $driver, $key );
         }
         require File::Spec;
         require MT::Template;
@@ -368,6 +382,11 @@ sub _post_save_template {
                 }
             }
         }
+    }
+    if ( my $driver = MT->config( 'DynamicCacheDriver' ) ) {
+        my $prefix = MT->config( 'DynamicCachePrefix' );
+        my $key = $prefix . '_template_' . $obj->id;
+        _clear_dynamic_cache( $driver, $key );
     }
     return 1;
 }
@@ -575,14 +594,82 @@ sub _cb_tp {
     }
 }
 
-sub _cb_save_config {
-    if ( my $config_cache = MT->config( 'DynamicConfigCacheFile' ) ) {
-        require MT::FileMgr;
-        my $fmgr = MT::FileMgr->new( 'Local' ) or die MT::FileMgr->errstr;
-        if ( $fmgr->exists( $config_cache ) ) {
-            $fmgr->delete( $config_cache );
+sub _cb_post_change {
+    my ( $cb, $obj ) = @_;
+    if ( my $driver = MT->config( 'DynamicCacheDriver' ) ) {
+        my $callback = $cb->name;
+        my $prefix = MT->config( 'DynamicCachePrefix' );
+        my $cfg_objects = MT->config( 'DynamicCacheObjects' );
+        my @objects = split( /,/, $cfg_objects );
+        push ( @objects, ( 'blog', 'config', 'fileinfo' ) );
+        my $target;
+        if ( $callback =~ /^MT::(.*?)::/ ) {
+            $target = lc( $1 );
+        }
+        return unless $target;
+        if ( grep( /^$target$/, @objects ) ) {
+            my $key;
+            if ( $target eq 'page' ) {
+                $target = 'entry';
+            } elsif ( $target eq 'folder' ) {
+                $target = 'category';
+            }
+            if ( $target eq 'config' ) {
+                $key = $prefix . '_' . $target;
+            } elsif ( $target eq 'fileinfo' ) {
+                my $file = $obj->file_path;
+                require Digest::MD5;
+                $file = Digest::MD5::md5_hex( $file );
+                $key = $prefix . '_' . $target . '_' . $file;
+            } else {
+                $key = $prefix . '_' . $target . '_' . $obj->id;
+            }
+            _clear_dynamic_cache( $driver, $key );
         }
     }
+    return 1;
+}
+
+sub _clear_dynamic_cache {
+    my ( $driver, $key ) = @_;
+    if ( lc( $driver ) eq 'file' ) {
+        require File::Spec;
+        my $cache = File::Spec->catdir( powercms_files_dir_path(), 'cache', $key );
+        require MT::FileMgr;
+        my $fmgr = MT::FileMgr->new( 'Local' );
+        if ( $fmgr->exists( $cache ) ) {
+            $fmgr->delete( $cache );
+        }
+    } elsif ( lc( $driver ) =~ /^memcache/ ) {
+        my $app = MT->instance;
+        my $memcache = _get_memcached_instance();
+        if ( $memcache ) {
+            $memcache->delete( $key );
+        }
+    }
+}
+
+sub _get_memcached_instance {
+    my $app = MT->instance;
+    my $memcache = MT->request( 'DynamicMemcachedDriver' );
+    if (! $memcache ) {
+        my $default = $app->config( 'MemcachedServers' );
+        require MT::Memcached;
+        if (! $default ) {
+            my $server = $app->config( 'DynamicMemcachedServer' );
+            my $port = $app->config( 'DynamicMemcachedPort' );
+            $server .= ':' . $port if $port;
+            $app->config( 'MemcachedServers', $server );
+            $memcache = MT::Memcached->new();
+            $app->config( 'MemcachedServers', $default );
+        } else {
+            $memcache = MT::Memcached->instance;
+        }
+    }
+    if ( defined $memcache ) {
+        MT->request( 'DynamicMemcachedDriver', $memcache );
+    }
+    return $memcache;
 }
 
 1;

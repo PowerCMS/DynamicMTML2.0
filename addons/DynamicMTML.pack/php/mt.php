@@ -43,9 +43,9 @@ class MT {
     );
     protected $blog_id;
     //protected $db; //
-    var $db; //
-    protected $config;
-    protected $debugging = false;
+    public $db; //
+    public $config; //
+    public $debugging = false; //
     protected $caching = false;
     protected $conditional = false;
     protected $log = array();
@@ -56,9 +56,9 @@ class MT {
     protected $cfg_file;
     protected $mt_dir; //
     protected $php_dir; //
+    protected $app; //
     private  $cache_driver = null;
     private static $_instance = null;
-
     /***
      * Constructor for MT class.
      * Currently, constructor moved to private method because this class implemented Singleton Design Pattern.
@@ -70,6 +70,8 @@ class MT {
     // Not private function // D
     function __construct($blog_id = null, $cfg_file = null) { //
         global $mt_dir; //
+        global $app; //
+        $this->app = $app; //
         $this->mt_dir = $mt_dir; //
         $this->php_dir = $mt_dir . DIRECTORY_SEPARATOR . 'php'; //
         error_reporting(E_ALL ^ E_NOTICE ^ E_WARNING);
@@ -352,48 +354,47 @@ class MT {
         }
     }
 
-    function configure_from_db() {
+    // function configure_from_db() {
+    //     $cfg =& $this->config;
+    //     $mtdb =& $this->db();
+    //     $db_config = $mtdb->fetch_config();
+    //     if ($db_config) {
+    //         $data = $db_config->data();
+    //         foreach ($data as $key => $value) {
+    //             $cfg[$key] = $value;
+    //         }
+    //         $mtdb->set_names($this);
+    //     }
+    // 
+    //     if ( !empty( $cfg['debugmode'] ) && intval($cfg['debugmode']) > 0 ) {
+    //         $this->debugging = true;
+    //     }
+    // }
+
+    function configure_from_db() { // Trigger Callbacks
         $cfg =& $this->config;
-        if (isset($cfg['allowconnectotherdb'])){ //
-            return 1; //
-        } //
-        /*  Cache config //
+        $app = $this->app;
+        $res = $app->run_callbacks( 'configure_from_db',
+                                     $this, $this->context(), $this->get_args, $cfg );
+        if ( $res === false ) {
+            return;
+        }
         $mtdb =& $this->db();
         $db_config = $mtdb->fetch_config();
         if ($db_config) {
             $data = $db_config->data();
             foreach ($data as $key => $value) {
                 $cfg[$key] = $value;
+                if ( $key == 'debugmode' ) {
+                    if ($value && intval($value)) {
+                        $this->debugging = true;
+                    }
+                }
             }
             $mtdb->set_names($this);
         }
-        */
-        $cfg_cache = $cfg['dynamicconfigcachefile']; //
-        if ($cfg_cache && file_exists($cfg_cache)) { //
-            $ser = file_get_contents($cfg_cache); //
-            $data = unserialize($ser); //
-        } else { //
-            $mtdb =& $this->db(); //
-            $db_config = $mtdb->fetch_config(); //
-            $data = $db_config->data(); //
-            if ( $cfg_cache ) { //
-                $ser = serialize($data); //
-                file_put_contents( $cfg_cache, $ser ); //
-            } //
-        } //
-        foreach ($data as $key => $value) {
-            $cfg[$key] = $value;
-            if ( $key == 'debugmode' ) { //
-                if ($value && intval($value)) { //
-                    $this->debugging = true; //
-                } //
-            } //
-        } //
-        /* Move to foreach //
-        if ( !empty( $cfg['debugmode'] ) && intval($cfg['debugmode']) > 0 ) {
-            $this->debugging = true;
-        }
-        */
+        $app->run_callbacks( 'post_configure_from_db',
+                              $this, $this->context(), $this->get_args, $db_config );
     }
 
     function config_defaults() {

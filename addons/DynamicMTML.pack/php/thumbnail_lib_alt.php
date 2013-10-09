@@ -1,4 +1,5 @@
 <?php
+/* Backward compatibility */
 require_once( 'class.exception.php' );
 
 class Thumbnail_alt {
