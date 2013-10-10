@@ -7,10 +7,11 @@ class MemcachedContents extends MTPlugin {
         'key'  => 'memcachedcontents',
         'author_name' => 'Alfasado Inc.',
         'author_link' => 'http://alfasado.net/',
-        'version' => '0.1',
+        'version' => '0.2',
         'config_settings' => array(
             'MemcachedContentsConditional' => array( 'default' => 1 ),
             'MemcachedContentsLifeTime' => array( 'default' => 43200 ),
+            'MemcachedContentsExcludes' => array( 'default' => '' ),
         ),
         'callbacks' => array(
             'configure_from_db' => 'configure_from_db',
@@ -23,6 +24,17 @@ class MemcachedContents extends MTPlugin {
             $app = $this->app;
             if ( $app->request_method !== 'GET' ) {
                 return TRUE;
+            }
+            $url = $args[ 'url' ];
+            if ( $excludes = $cfg[ 'memcachedcontentsexcludes' ] ) {
+                $paths = explode( ',', $excludes );
+                foreach ( $paths as $path ) {
+                    $path = preg_quote( $path, '/' );
+                    if ( preg_match( "/$path/", $url ) ) {
+                        return TRUE;
+                        break;
+                    }
+                }
             }
             $cachedriver = strtolower( $cfg[ 'dynamiccachedriver' ] );
             $pos = strpos( $cachedriver, 'memcache' );
@@ -39,7 +51,6 @@ class MemcachedContents extends MTPlugin {
                 $app->cache_driver = $driver;
             }
             if (! $driver ) return TRUE;
-            $url = $args[ 'url' ];
             $prefix = $app->config( 'DynamicCachePrefix' );
             $url = md5( $url );
             $key = "${prefix}_content_" . $url;
