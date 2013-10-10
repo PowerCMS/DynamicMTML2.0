@@ -177,6 +177,7 @@ class DynamicMTML_pack extends MTPlugin {
         if ( $driver = $this->app->cache_driver ) {
             $prefix = $this->app->cache_prefix;
             $key = "${prefix}_blog_" . $args[ 'blog_id' ];
+            require_once( 'class.mt_blog.php' );
             $blog = $driver->get( $key );
             if ( $blog && is_object( $blog ) ) {
                 $ctx->stash( 'blog', $blog );
@@ -195,6 +196,7 @@ class DynamicMTML_pack extends MTPlugin {
             $file = md5( $app->stash( 'file' ) );
             $prefix = $this->app->cache_prefix;
             $key = "${prefix}_fileinfo_" . $file;
+            require_once( "class.mt_fileinfo.php" );
             $data = $driver->get( $key );
             if (! $data ) return;
             $app->stash( 'using_cached_fileinfo', 1 );
@@ -205,6 +207,7 @@ class DynamicMTML_pack extends MTPlugin {
                 $col = strtolower( "${obj}_id" );
                 if ( $object_id = $data->$col ) {
                     $key = "${prefix}_${obj}_" . $object_id;
+                    require_once( "class.mt_${obj}.php" );
                     if ( $object = $driver->get( $key ) ) {
                         $ctx->stash( $obj, $object );
                     }
