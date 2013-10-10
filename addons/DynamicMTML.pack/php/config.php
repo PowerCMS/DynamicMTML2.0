@@ -23,8 +23,8 @@ class DynamicMTML_pack extends MTPlugin {
             'DynamicCachePrefix' => array( 'default' => 'dynamicmtmlcache' ),
             'DynamicCacheTTL' => array( 'default' => 7200 ),
             'DynamicCacheObjects' => array( 'default' => 'template,category' ),
-            'DynamicMemcachedServer' => array( 'default' => 'localhost' ),
-            'DynamicMemcachedPort' => array( 'default' => 11211 ),
+            'DynamicMemcachedServer' => array( 'default' => '' ),
+            'DynamicMemcachedPort' => array( 'default' => '' ),
             'DynamicMemcachedCompressed' => array( 'default' => '' ),
         ),
         'settings' => array( // PluginSettings

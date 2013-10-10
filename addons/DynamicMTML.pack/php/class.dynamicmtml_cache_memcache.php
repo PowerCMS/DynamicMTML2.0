@@ -10,9 +10,18 @@ class DynamicCacheMemcache extends DynamicCache {
         $this->app = $app;
         $this->ttl = $app->cache_driver->ttl;
         $this->prefix = $app->config( 'DynamicCachePrefix' );
-        $memcache = new Memcache;
         $server = $app->config( 'DynamicMemcachedServer' );
         $port = $app->config( 'DynamicMemcachedPort' );
+        if ( (! $server ) && (! $port ) ) {
+            if ( $servers = $app->config( 'MemcachedServers' ) ) {
+                $serverses = explode( ':', $servers );
+                $server = $serverses[ 0 ];
+                $port = $serverses[ 1 ];
+            } else {
+                $server = 'localhost';
+                $port = '11211';
+            }
+        }
         $compressed = $app->config( 'DynamicMemcachedCompressed' );
         if ( $compressed ) {
             $compressed = TRUE;
@@ -20,6 +29,7 @@ class DynamicCacheMemcache extends DynamicCache {
             $compressed = FALSE;
         }
         $this->compressed = $compressed;
+        $memcache = new Memcache;
         $memcache->connect( $server, $port );
         $this->memcache = $memcache;
         // $this->clear( NULL, 'DEBUG' );
