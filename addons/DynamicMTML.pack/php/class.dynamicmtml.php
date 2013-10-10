@@ -589,7 +589,7 @@ class DynamicMTML {
             if ( is_dir( $plugin_dir ) ) {
                 if ( $dh = opendir( $plugin_dir ) ) {
                     while ( ( $dir = readdir( $dh ) ) !== FALSE ) {
-                        if ( strpos( $dir, '.' ) !== 0 ) {
+                        if ( $dir[ 0 ] === '.' ) {
                             $plugin_base = $plugin_dir . DIRECTORY_SEPARATOR . $dir;
                             $plugin = NULL;
                             $config = array();
@@ -601,7 +601,7 @@ class DynamicMTML {
                                 $extension = end( $extension );
                                 if ( $extension === 'pack' ) {
                                     $plugin_class = strtr( $plugin_class, '.', '_' );
-                                    $plugin_key = rtrim( $plugin_key, '.pack' );
+                                    $plugin_key = preg_replace( '/\.pack$/', '', $plugin_key );
                                 }
                                 $plugins_dir_path[ $plugin_key ] = $plugin_base;
                                 $plugin_php_dir = $plugin_base . DIRECTORY_SEPARATOR . 'php';
@@ -1289,7 +1289,7 @@ class DynamicMTML {
 
     function type_text ( $contenttype ) {
         $type = explode( '/', $contenttype );
-        if ( $type[ 0 ] === 'text' || rtrim( $contenttype, 'xml' ) !== $contenttype ) {
+        if ( $type[ 0 ] === 'text' || substr( $contenttype, -3 ) === 'xml' ) {
             return 1;
         }
         return 0;
@@ -1742,12 +1742,14 @@ class DynamicMTML {
         if ( isset( $client_author ) ) {
             $real_pass = $client_author->password;
             if ( strpos( $real_pass, '$6$' ) === 0 ) {
-                $real_pass = ltrim( $real_pass, '$6$' );
+                $search = preg_quote( '$6$', '/' );
+                $real_pass = preg_replace( "/^$search/", '' );
                 list ( $salt, $real_pass ) = explode( '$', $real_pass );
                 $digest = base64_encode( hash( 'sha512', $salt . $password, 1 ) );
                 $password = rtrim( $digest, '==' );
             } elseif ( strpos( $real_pass, '{SHA}' ) === 0 ) {
-                $real_pass = ltrim( $real_pass, '{SHA}' );
+                $search = preg_quote( '{SHA}', '/' );
+                $real_pass = preg_replace( "/^$search/", '' );
                 list ( $salt, $real_pass ) = explode( '$', $real_pass );
                 $password = hash( 'sha1', $salt . $password );
             } else {
@@ -2995,7 +2997,7 @@ class DynamicMTML {
 
     function __get_object_context ( $obj ) {
         $table = $obj->_table;
-        $table = ltrim( $table, 'mt_' );
+        if ( strpos( $table, 'mt_' ) === 0 ) $table = substr( $table, 3 );
         $fileinfo_key = $table . '_id';
         $blog = $obj->blog();
         $at = NULL;
@@ -3780,7 +3782,7 @@ class DynamicMTML {
     function set_tags ( $object, $tags ) {
         $object_ds = $object->_table;
         $object_id = $object->id;
-        $object_ds = ltrim( $object_ds, 'mt_' );
+        if ( strpos( $object_ds, 'mt_' ) === 0 ) $object_ds = substr( $object_ds, 3 );
         $orig_tags = $this->fetch_tags( $object, array( 'include_private' => 1 ) );
         if (! $tags ) {
             if ( $orig_tags ) {
@@ -3846,7 +3848,7 @@ class DynamicMTML {
         $ctx = $this->ctx;
         $object_id = $object->id;
         $object_ds = $object->_table;
-        $object_ds = ltrim( $object_ds, 'mt_' );
+        if ( strpos( $object_ds, 'mt_' ) === 0 ) $object_ds = substr( $object_ds, 3 );
         if (! isset( $args ) ) {
             if ( $cache = $this->stash( $object_ds . "_tag_cache[{$object_id}]" ) ) {
                 return $cache;
@@ -4021,10 +4023,8 @@ class DynamicMTML {
                 $key = $this->escape( $key );
                 if ( $_obj->has_column( $key ) ) {
                     $_prefix = $prefix;
-                    // if ( preg_match( "/^${_prefix}/", $key ) ) {
-                        // $key = preg_replace( "/^${_prefix}/", '', $key );
-                    if ( ltrim( $key, $_prefix ) !== $key ) {
-                        $key = ltrim( $key, $_prefix );
+                    if ( preg_match( "/^${_prefix}/", $key ) ) {
+                        $key = preg_replace( "/^${_prefix}/", '', $key );
                     }
                     if ( in_array( $key, $raw_columns ) ) $_prefix = '';
                     if ( $key === 'class' ) {
@@ -4177,7 +4177,7 @@ class DynamicMTML {
                         $class_name = $arg_array[0];
                         if ( isset( $arg_array[1] ) && is_string( $arg_array[ 1 ] ) ) {
                             if ( is_array( $arg_array[ 2 ] ) ) {
-                                $column = ltrim( $arg_array[ 0 ], 'mt_' );
+                                $column = preg_replace( '/^mt_/', '', $arg_array[ 0 ] );
                                 $extras = $arg_array[ 1 ] . '=' . $column . '.' . $arg_array[ 1 ] . ' AND ';
                                 $expression = '';
                                 if ( is_array( $arg_array[ 2 ] ) && __is_hash( $arg_array[ 2 ] ) ) {
@@ -4245,10 +4245,11 @@ class DynamicMTML {
             $prefix = $obj->_prefix;
         } else {
             $prefix = $obj->_table;
-            $prefix = ltrim( $prefix, 'mt_' );
+            if ( strpos( $prefix, 'mt_' ) === 0 ) $prefix = substr( $prefix, 3 );
             $prefix .= '_';
         }
-        if (! $this->run_callbacks( "{$do}_permission_filter.{$class}", $this->mt(), $this->ctx(), $this->args ) ) {
+        if (! $this->run_callbacks( "{$do}_permission_filter.{$class}",
+                                                $this->mt(), $this->ctx(), $this->args ) ) {
             return $res;
         }
         if ( $do === 'save' ) {
