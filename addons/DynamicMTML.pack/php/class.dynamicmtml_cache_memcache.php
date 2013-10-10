@@ -12,15 +12,19 @@ class DynamicCacheMemcache extends DynamicCache {
         $this->prefix = $app->config( 'DynamicCachePrefix' );
         $server = $app->config( 'DynamicMemcachedServer' );
         $port = $app->config( 'DynamicMemcachedPort' );
-        if ( (! $server ) && (! $port ) ) {
-            if ( $servers = $app->config( 'MemcachedServers' ) ) {
-                $serverses = explode( ':', $servers );
+        if (! $server ) {
+            $server = $app->config( 'MemcachedServers' );
+        }
+        if ( $server ) {
+            $pos = strpos( $server, ':' );
+            if ( $pos !== FALSE ) {
+                $serverses = explode( ':', $server );
                 $server = $serverses[ 0 ];
                 $port = $serverses[ 1 ];
-            } else {
-                $server = 'localhost';
-                $port = '11211';
             }
+        } else {
+            $server = 'localhost';
+            $port = '11211';
         }
         $compressed = $app->config( 'DynamicMemcachedCompressed' );
         if ( $compressed ) {

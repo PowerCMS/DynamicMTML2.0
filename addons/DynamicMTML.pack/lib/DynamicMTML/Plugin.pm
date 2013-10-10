@@ -655,10 +655,10 @@ sub _get_memcached_instance {
     my $memcache = MT->request( 'DynamicMemcachedDriver' );
     if (! $memcache ) {
         my $default = $app->config( 'MemcachedServers' );
+        my $server = $app->config( 'DynamicMemcachedServer' );
+        my $port = $app->config( 'DynamicMemcachedPort' );
         require MT::Memcached;
-        if (! $default ) {
-            my $server = $app->config( 'DynamicMemcachedServer' );
-            my $port = $app->config( 'DynamicMemcachedPort' );
+        if ( $server ) {
             $server .= ':' . $port if $port;
             $app->config( 'MemcachedServers', $server );
             $memcache = MT::Memcached->new();
