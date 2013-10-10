@@ -457,18 +457,24 @@ class DynamicMTML {
     }
 
     function configure ( $file = NULL ) {
-        // if ( isset( $this->config ) ) return $config;
+        if ( isset( $this->config ) ) return $config;
         $this->cfg_file = $file;
         $cfg = array();
+        $type_array = array( 'pluginpath', 'alttemplate', 'outboundtrackbackdomains',
+                             'memcachedservers', 'userpasswordvalidation', 'dynamicmemcachedservers' );
+        $type_hash = array( 'commenterregistration' );
         if ( file_exists( $file ) ) {
             if ( $fp = file( $file ) ) {
                 foreach ( $fp as $line ) {
                     if (! preg_match('/^\s*\#/i', $line ) ) {
                         if ( preg_match( '/^\s*(\S+)\s+(.*)$/', $line, $regs ) ) {
-                            $key = strtolower( trim( $regs[1] ) );
-                            $value = trim( $regs[2] );
-                            if ( $key === 'pluginpath' ) {
+                            $key = strtolower( trim( $regs[ 1 ] ) );
+                            $value = trim( $regs[ 2 ] );
+                            if ( in_array( $key, $type_array ) ) {
                                 $cfg[ $key ][] = $value;
+                            } elseif ( in_array( $key, $type_hash ) ) {
+                                $hash = preg_split( '/\=/', $value, 2 );
+                                $cfg[ $key ][ strtolower( trim( $hash[ 0 ] ) ) ] = trim( $hash[ 1 ] );
                             } else {
                                 $cfg[ $key ] = $value;
                             }

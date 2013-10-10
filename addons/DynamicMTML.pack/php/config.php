@@ -7,7 +7,7 @@ class DynamicMTML_pack extends MTPlugin {
         'key'  => 'dynamicmtml',
         'author_name' => 'Alfasado Inc.',
         'author_link' => 'http://alfasado.net/',
-        'version' => '2.0(beta1)',
+        'version' => '2.0beta2',
         'description' => 'DynamicMTML is PHP extension for Movable Type.',
         'config_settings' => array( // mt-config.cgi
             'DynamicForceCompile' => array( 'default' => 0 ),
@@ -23,8 +23,7 @@ class DynamicMTML_pack extends MTPlugin {
             'DynamicCachePrefix' => array( 'default' => 'dynamicmtmlcache' ),
             'DynamicCacheTTL' => array( 'default' => 7200 ),
             'DynamicCacheObjects' => array( 'default' => 'template,category' ),
-            'DynamicMemcachedServer' => array( 'default' => '' ),
-            'DynamicMemcachedPort' => array( 'default' => '' ),
+            'DynamicMemcachedServers' => array( 'default' => '' ),
             'DynamicMemcachedCompressed' => array( 'default' => '' ),
         ),
         'settings' => array( // PluginSettings

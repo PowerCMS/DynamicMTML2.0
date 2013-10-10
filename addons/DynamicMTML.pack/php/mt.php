@@ -261,34 +261,40 @@ class MT {
         if (isset($this->config)) return $config;
 
         $this->cfg_file = $file;
-
-        $cfg = array();
-        $type_array = array('pluginpath', 'alttemplate', 'outboundtrackbackdomains', 'memcachedservers', 'userpasswordvalidation');
-        $type_hash  = array('commenterregistration');
-        if ($fp = file($file)) {
-            foreach ($fp as $line) {
-                // search through the file
-                if (!preg_match('/^\s*\#/i',$line)) {
-                    // ignore lines starting with the hash symbol
-                    if (preg_match('/^\s*(\S+)\s+(.*)$/', $line, $regs)) {
-                        $key = strtolower(trim($regs[1]));
-                        $value = trim($regs[2]);
-                        if (in_array($key, $type_array)) {
-                            $cfg[$key][] = $value;
-                        }
-                        elseif (in_array($key, $type_hash)) {
-                            $hash = preg_split('/\=/', $value, 2);
-                            $cfg[$key][strtolower(trim($hash[0]))] = trim($hash[1]);
-                        } else {
-                            $cfg[$key] = $value;
+        $app = $this->app; //
+        if ( $app ) { //
+            $cfg = $app->config; //
+            $original = 1; //
+        } //
+        if (! $cfg ) $cfg = array(); //
+        // $cfg = array(); //
+        if (! $original ) { //
+            $type_array = array('pluginpath', 'alttemplate', 'outboundtrackbackdomains', 'memcachedservers', 'userpasswordvalidation');
+            $type_hash  = array('commenterregistration');
+            if ($fp = file($file)) {
+                foreach ($fp as $line) {
+                    // search through the file
+                    if (!preg_match('/^\s*\#/i',$line)) {
+                        // ignore lines starting with the hash symbol
+                        if (preg_match('/^\s*(\S+)\s+(.*)$/', $line, $regs)) {
+                            $key = strtolower(trim($regs[1]));
+                            $value = trim($regs[2]);
+                            if (in_array($key, $type_array)) {
+                                $cfg[$key][] = $value;
+                            }
+                            elseif (in_array($key, $type_hash)) {
+                                $hash = preg_split('/\=/', $value, 2);
+                                $cfg[$key][strtolower(trim($hash[0]))] = trim($hash[1]);
+                            } else {
+                                $cfg[$key] = $value;
+                            }
                         }
                     }
                 }
+            } else {
+                // die("Unable to open configuration file $file"); //
             }
-        } else {
-            // die("Unable to open configuration file $file"); //
-        }
-
+        } //
         // setup directory locations
         // location of mt.php
         // $cfg['phpdir'] = realpath(dirname(__FILE__)); //
@@ -325,23 +331,24 @@ class MT {
             }
         }
 
-        // set up include path
-        // add MT-PHP 'plugins' and 'lib' directories to the front
-        // of the existing PHP include path:
-        if (strtoupper(substr(PHP_OS, 0,3) == 'WIN')) {
-            $path_sep = ';';
-        } else {
-            $path_sep = ':';
-        }
-        ini_set('include_path',
-            $cfg['phpdir'] . DIRECTORY_SEPARATOR . "lib" . $path_sep .
-            $cfg['phpdir'] . DIRECTORY_SEPARATOR . "extlib" . $path_sep .
-            $cfg['phpdir'] . DIRECTORY_SEPARATOR . "extlib" . DIRECTORY_SEPARATOR . "smarty" . DIRECTORY_SEPARATOR . "libs" . $path_sep .
-            $cfg['phpdir'] . DIRECTORY_SEPARATOR . "extlib" . DIRECTORY_SEPARATOR . "adodb5" . $path_sep .
-            $cfg['phpdir'] . DIRECTORY_SEPARATOR . "extlib" . DIRECTORY_SEPARATOR . "FirePHPCore" . $path_sep .
-            ini_get('include_path')
-        );
-
+        if (! $original) { //
+            // set up include path
+            // add MT-PHP 'plugins' and 'lib' directories to the front
+            // of the existing PHP include path:
+            if (strtoupper(substr(PHP_OS, 0,3) == 'WIN')) {
+                $path_sep = ';';
+            } else {
+                $path_sep = ':';
+            }
+            ini_set('include_path',
+                $cfg['phpdir'] . DIRECTORY_SEPARATOR . "lib" . $path_sep .
+                $cfg['phpdir'] . DIRECTORY_SEPARATOR . "extlib" . $path_sep .
+                $cfg['phpdir'] . DIRECTORY_SEPARATOR . "extlib" . DIRECTORY_SEPARATOR . "smarty" . DIRECTORY_SEPARATOR . "libs" . $path_sep .
+                $cfg['phpdir'] . DIRECTORY_SEPARATOR . "extlib" . DIRECTORY_SEPARATOR . "adodb5" . $path_sep .
+                $cfg['phpdir'] . DIRECTORY_SEPARATOR . "extlib" . DIRECTORY_SEPARATOR . "FirePHPCore" . $path_sep .
+                ini_get('include_path')
+            );
+        } //
         // assign i18n defaults:
         $lang = strtolower($cfg['defaultlanguage']);
         if (! @include_once("i18n_$lang.php")) {

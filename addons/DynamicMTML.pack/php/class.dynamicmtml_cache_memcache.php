@@ -10,22 +10,24 @@ class DynamicCacheMemcache extends DynamicCache {
         $this->app = $app;
         $this->ttl = $app->cache_driver->ttl;
         $this->prefix = $app->config( 'DynamicCachePrefix' );
-        $server = $app->config( 'DynamicMemcachedServer' );
-        $port = $app->config( 'DynamicMemcachedPort' );
+        $server = $app->config( 'DynamicMemcachedServers' );
+        $port;
         if (! $server ) {
             $server = $app->config( 'MemcachedServers' );
         }
+        $servers = array();
         if ( $server ) {
-            $pos = strpos( $server, ':' );
-            if ( $pos !== FALSE ) {
-                $serverses = explode( ':', $server );
-                $server = $serverses[ 0 ];
-                $port = $serverses[ 1 ];
+            if ( is_array( $server ) ) {
+                $servers = $server;
+                $server = array_pop( $servers );
             }
+            $serverses = explode( ':', $server );
+            $server = $serverses[ 0 ];
+            $port = $serverses[ 1 ];
         } else {
             $server = 'localhost';
-            $port = '11211';
         }
+        if (! $port ) $port = '11211';
         $compressed = $app->config( 'DynamicMemcachedCompressed' );
         if ( $compressed ) {
             $compressed = TRUE;
@@ -35,6 +37,15 @@ class DynamicCacheMemcache extends DynamicCache {
         $this->compressed = $compressed;
         $memcache = new Memcache;
         $memcache->connect( $server, $port );
+        if ( $servers ) {
+            foreach ( $servers as $server ) {
+                $serverses = explode( ':', $server );
+                $server = $serverses[ 0 ];
+                $port = $serverses[ 1 ];
+                if (! $port ) $port = '11211';
+                $memcache->addServer( $server, $port );
+            }
+        }
         $this->memcache = $memcache;
         // $this->clear( NULL, 'DEBUG' );
         // $version = $memcache->getVersion();
