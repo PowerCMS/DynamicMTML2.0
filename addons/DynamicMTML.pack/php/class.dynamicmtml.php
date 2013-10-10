@@ -539,11 +539,7 @@ class DynamicMTML {
         if ( $param ) {
             $basename .= '_' . md5( $param );
         }
-        $pinfo = pathinfo( $file );
-        $extension = NULL;
-        if ( isset ( $pinfo[ 'extension' ] ) ) {
-            $extension = $pinfo[ 'extension' ];
-        }
+        $extension = strtolower( pathinfo( $file, PATHINFO_EXTENSION ) );  
         $cache = $this->cache_dir . DIRECTORY_SEPARATOR . $basename . '.' . $extension;
         return $cache;
     }
@@ -593,7 +589,7 @@ class DynamicMTML {
             if ( is_dir( $plugin_dir ) ) {
                 if ( $dh = opendir( $plugin_dir ) ) {
                     while ( ( $dir = readdir( $dh ) ) !== FALSE ) {
-                        if (! preg_match ( '/^\./', $dir ) ) {
+                        if ( strpos( $dir, '.' ) !== 0 ) {
                             $plugin_base = $plugin_dir . DIRECTORY_SEPARATOR . $dir;
                             $plugin = NULL;
                             $config = array();
@@ -601,9 +597,11 @@ class DynamicMTML {
                                 $split_dirs = explode( DIRECTORY_SEPARATOR, $plugin_base );
                                 $plugin_class = $split_dirs[ count( $split_dirs ) - 1 ];
                                 $plugin_key = strtolower( $split_dirs[ count( $split_dirs ) - 1 ] );
-                                if ( preg_match( '/\.pack$/', $plugin_class ) ) {
+                                $extension = explode( '.', $plugin_class );
+                                $extension = end( $extension );
+                                if ( $extension === 'pack' ) {
                                     $plugin_class = strtr( $plugin_class, '.', '_' );
-                                    $plugin_key = preg_replace( '/\.pack$/', '', $plugin_key );
+                                    $plugin_key = rtrim( $plugin_key, '.pack' );
                                 }
                                 $plugins_dir_path[ $plugin_key ] = $plugin_base;
                                 $plugin_php_dir = $plugin_base . DIRECTORY_SEPARATOR . 'php';
@@ -722,12 +720,12 @@ class DynamicMTML {
                     if ( is_array( $tags ) ) {
                         foreach ( $tags as $tag => $funk ) {
                             $tag = strtolower( $tag );
-                            if ( preg_match( '/::/', $funk ) ) {
+                            if ( strpos( $funk, '::' ) !== FALSE ) {
                                 $path = explode( '::', $funk );
-                                $funk = $path[ count( $path ) - 1 ];
+                                $funk = end( $path );
                             }
                             if ( $kind === 'block' ) {
-                                $tag = preg_replace( '/\?$/', '', $tag );
+                                $tag = rtrim( $tag, '?' );
                                 $blocks[ $tag ] = array( $plugin_key => $funk );
                             } elseif ( $kind === 'function' ) {
                                 $functions[ $tag ] = array( $plugin_key => $funk );
@@ -754,9 +752,9 @@ class DynamicMTML {
                     }
                 }
                 if ( $val ) {
-                    if ( preg_match( '/::/', $val ) ) {
+                    if ( strpos( $val, '::' !== FALSE ) ) {
                         $path = explode( '::', $val );
-                        $val = $path[ count( $path ) - 1 ];
+                        $val = end( $path );
                     }
                     $new_config[ $key ] = $val;
                 }
@@ -824,9 +822,9 @@ class DynamicMTML {
                         if ( $plugin && is_object( $plugin ) ) {
                             $code = $settings[ 'code' ];
                             if ( $code ) {
-                                if ( preg_match( '/::/', $code ) ) {
+                                if ( strpos( $code, '::' ) !== FALSE ) {
                                     $path = explode( '::', $code );
-                                    $code = $path[ count( $path ) - 1 ];
+                                    $code = end( $path );
                                 }
                                 if (! method_exists( $plugin, $code ) ) {
                                     $plugin = NULL;
@@ -1126,8 +1124,8 @@ class DynamicMTML {
         if ( $original && $replace ) {
             $file = preg_replace( '/' . preg_quote( $original, '/' ) . '/', $replace, $file );
         }
-        if ( preg_match( '/' . preg_quote( DIRECTORY_SEPARATOR, '/' ) . '$/', $file ) ) {
-            $file = preg_replace( '/\/$/', '', $file );
+        if ( rtrim( $file, DIRECTORY_SEPARATOR ) !== $file ) {
+            $file = rtrim( $file, DIRECTORY_SEPARATOR );
             if ( is_dir ( $file ) ) {
                 $file = $file . DIRECTORY_SEPARATOR . 'index.html';
             }
@@ -1143,35 +1141,32 @@ class DynamicMTML {
 
     function check_excludes ( $file, $excludes = 'php', $mt_dir = NULL, $static_path = NULL ) {
         $self = $_SERVER[ 'SCRIPT_FILENAME' ];
-        $self = preg_quote( $self, '/' );
-        if ( preg_match( "/^$self/i", $file ) ) {
+        $file = strtolower( $file );
+        if ( strpos( $file, $self  ) === 0 ) {
             exit();
         }
-        if ( $mt_dir && $static_path ) {
-            $mt_dir = $this->__add_slash( $mt_dir );
-            $check_mt = preg_quote( $mt_dir, '/' );
-            $check_static = preg_quote( $static_path, '/' );
-            if ( preg_match( "/^$check_mt/i", $file ) ) {
-                if (! preg_match( "/^$check_static/i", $file ) ) {
-                    exit();
-                }
+        if ( $mt_dir && ( strpos( $file, $mt_dir  ) === 0 ) ) {
+            if (! $static_path ) exit();
+            if ( strpos( $file, $static_path  ) !== FALSE ) {
+                exit();
             }
         }
-        $basename = explode(DIRECTORY_SEPARATOR, $file);
-        $basename = end($basename);
-        if ($basename[0] === '.') {
+        $basename = explode( DIRECTORY_SEPARATOR, $file );
+        $basename = end( $basename );
+        if ( $basename[ 0 ] === '.' ) {
             exit();
         }
-        foreach ( explode( ',', $excludes ) as $extension ) {
-            if ( preg_match( "/\.$extension\$/", $basename ) ) {
+        $excludes = explode( ',', $excludes );
+        $file_extension = strtolower( pathinfo( $file, PATHINFO_EXTENSION ) );
+        foreach ( $excludes as $extension ) {
+            if ( $file_extension === $extension ) {
                 exit();
             }
         }
     }
 
     function __add_slash ( $path, $add = TRUE ) {
-        $sep = preg_quote( DIRECTORY_SEPARATOR, '/' );
-        $path = preg_replace( "/$sep$/", '', $path );
+        $path = rtrim( $path, DIRECTORY_SEPARATOR );
         if ( $add ) {
             $path .= DIRECTORY_SEPARATOR;
         }
@@ -1180,7 +1175,8 @@ class DynamicMTML {
 
     function include_php ( $file ) {
         if ( file_exists( $file ) ) {
-            if ( preg_match( "/\.php$/", $file ) ) {
+            $extension = strtolower( pathinfo( $file, PATHINFO_EXTENSION ) );
+            if ( $extension === 'php' ) {
                 include( $file );
                 exit();
             }
@@ -1188,9 +1184,11 @@ class DynamicMTML {
     }
 
     function get_mime_type ( $extension ) {
-        $extension = preg_replace( '/^\./', '', strtolower( $extension ) );
+        $extension = strtolower( $extension );
+        $extension = '.html';
+        $extension = ltrim( $extension, '.' );
         if ( isset( $_SERVER[ 'HTTP_USER_AGENT' ] ) ) {
-            if ( preg_match( '/\ADoCoMo\/2\.0 /', $_SERVER[ 'HTTP_USER_AGENT' ] ) ) {
+            if ( strpos( $_SERVER[ 'HTTP_USER_AGENT' ], 'DoCoMo/2.0' ) === 0 ) {
                 if ( $extension === 'html' ) {
                     return 'application/xhtml+xml';
                 }
@@ -1291,7 +1289,7 @@ class DynamicMTML {
 
     function type_text ( $contenttype ) {
         $type = explode( '/', $contenttype );
-        if ( $type[0] === 'text' || preg_match( '/xml$/', $contenttype ) ) {
+        if ( $type[ 0 ] === 'text' || rtrim( $contenttype, 'xml' ) !== $contenttype ) {
             return 1;
         }
         return 0;
@@ -1299,10 +1297,10 @@ class DynamicMTML {
 
     function chomp_dir ( $dir ) {
         if ( DIRECTORY_SEPARATOR != '/' ) {
-            $dir = preg_replace( '/\\$/', '', $dir );
+            $dir = rtrim( $dir, '\\' );
             $dir = strtr( $dir, '\\\\', '\\' );
         } else {
-            $dir = preg_replace( '/\/$/', '', $dir );
+            $dir = rtrim( $dir, '/' );
             $dir = strtr( $dir, '//', '/' );
         }
         return $dir;
@@ -1389,9 +1387,8 @@ class DynamicMTML {
             return 0;
         }
         $base = $this->base;
-        $q_base = preg_quote( $base, '/' );
         $referer = $_SERVER[ 'HTTP_REFERER' ];
-        if ( $referer && (! preg_match( "/^$q_base/", $referer ) ) ) {
+        if ( $referer && ( strpos( $referer, $base ) !== 0 ) ) {
             return 0;
         }
         $ctx = $this->ctx;
@@ -1399,12 +1396,12 @@ class DynamicMTML {
         $password = $this->param( 'password' );
         $remember = $this->param( 'remember' );
         $return_url = $this->param( 'return_url' );
-        if ( preg_match( '/^http/', $return_url ) ) {
-            if (! preg_match( "/^$q_base/", $return_url ) ) {
+        if ( strpos( $return_url, 'http' ) === 0 ) {
+            if ( strpos( $return_url, $base ) !== 0 ) {
                 $return_url = '';
             }
         } elseif ( $return_url ) {
-            if (! preg_match( '!^/!', $return_url ) ) {
+            if ( strpos( $return_url, '/' ) !== 0 ) {
                 $return_url = '/' . $return_url;
             }
             $return_url = $base . $return_url;
@@ -1464,7 +1461,7 @@ class DynamicMTML {
                 if (! $return_url ) {
                     $return_url = $this->base . $this->path . $this->script;
                 }
-                if (! preg_match( '/\?/', $return_url ) ) {
+                if ( strpos( $return_url, '?' ) === FALSE ) {
                     $return_url .= '?sessid=' . $sessid;
                 } else {
                     $return_url .= '&sessid=' . $sessid;
@@ -1882,7 +1879,7 @@ class DynamicMTML {
                 $query .= $key . '=' . $val . '&';
             }
         }
-        $query = preg_replace( '/&$/', '', $query );
+        $query = rtrim( $query, '&' );
         if ( preg_match( '/(^.*&)(' . $param . '=.*$)/', $query, $match ) ) {
             $pre = $match[1];
             $after;
@@ -1895,7 +1892,7 @@ class DynamicMTML {
                 $query = $this->delete_parameter( $query, $param );
             }
         }
-        $query = preg_replace( '/^&/', '', $query );
+        $query = ltrim( $query, '&' );
         return $query;
     }
 
@@ -2179,9 +2176,8 @@ class DynamicMTML {
         $blog_id = $this->blog_id;
         $entry_id = $entry->id;
         $url = $blog->site_url();
-        if (! preg_match( "!/$!", $url ) ) {
-            $url .= '/';
-        }
+        $url = rtrim( $url, '/' );
+        $url .= '/';
         preg_match( "!^https?://([^/:]+)(?::\d+)?(/.*)$!", $url, $match );
         $host = $match[ 1 ];
         if (! $host ) return '';
@@ -2357,13 +2353,8 @@ class DynamicMTML {
             $blog = $this->blog();
         }
         $site_url = $blog->site_url();
-        if (! $add_slash ) {
-            $site_url = preg_replace( "/\/$/", '', $site_url );
-        } else {
-            if (! preg_match( "/\/$/", $site_url ) ) {
-                $site_url .= '/';
-            }
-        }
+        $site_url = rtrim( $site_url, '/' );
+        if ( $add_slash ) $site_url .= '/';
         return $site_url;
     }
 
@@ -3004,7 +2995,7 @@ class DynamicMTML {
 
     function __get_object_context ( $obj ) {
         $table = $obj->_table;
-        $table = preg_replace( '/^mt_/', '', $table );
+        $table = ltrim( $table, 'mt_' );
         $fileinfo_key = $table . '_id';
         $blog = $obj->blog();
         $at = NULL;
@@ -3398,7 +3389,7 @@ class DynamicMTML {
                             }
                         }
                         $outfile = $tmpl->outfile;
-                        if ( $outfile && ( preg_match( '/^\./', $outfile ) ) ) {
+                        if ( $outfile && ( strpos( $outfile ) === 0 ) ) {
                             return NULL;
                         }
                     }
@@ -3789,7 +3780,7 @@ class DynamicMTML {
     function set_tags ( $object, $tags ) {
         $object_ds = $object->_table;
         $object_id = $object->id;
-        $object_ds = preg_replace( '/^mt_/', '', $object_ds );
+        $object_ds = ltrim( $object_ds, 'mt_' );
         $orig_tags = $this->fetch_tags( $object, array( 'include_private' => 1 ) );
         if (! $tags ) {
             if ( $orig_tags ) {
@@ -3855,7 +3846,7 @@ class DynamicMTML {
         $ctx = $this->ctx;
         $object_id = $object->id;
         $object_ds = $object->_table;
-        $object_ds = preg_replace( '/^mt_/', '', $object_ds );
+        $object_ds = ltrim( $object_ds, 'mt_' );
         if (! isset( $args ) ) {
             if ( $cache = $this->stash( $object_ds . "_tag_cache[{$object_id}]" ) ) {
                 return $cache;
@@ -4030,8 +4021,10 @@ class DynamicMTML {
                 $key = $this->escape( $key );
                 if ( $_obj->has_column( $key ) ) {
                     $_prefix = $prefix;
-                    if ( preg_match( "/^${_prefix}/", $key ) ) {
-                        $key = preg_replace( "/^${_prefix}/", '', $key );
+                    // if ( preg_match( "/^${_prefix}/", $key ) ) {
+                        // $key = preg_replace( "/^${_prefix}/", '', $key );
+                    if ( ltrim( $key, $_prefix ) !== $key ) {
+                        $key = ltrim( $key, $_prefix );
                     }
                     if ( in_array( $key, $raw_columns ) ) $_prefix = '';
                     if ( $key === 'class' ) {
@@ -4180,16 +4173,15 @@ class DynamicMTML {
                 //          "entry_id=placement_entry_id AND ( placement_category_id={$category_id}" ) ) );
                 $arg_array = $args[ 'join' ];
                 if ( is_array( $arg_array ) ) {
-                    if ( isset( $arg_array[0] ) && is_string( $arg_array[0] ) ) {
+                    if ( isset( $arg_array[0] ) && is_string( $arg_array[ 0 ] ) ) {
                         $class_name = $arg_array[0];
-                        if ( isset( $arg_array[1] ) && is_string( $arg_array[1] ) ) {
-                            if ( is_array( $arg_array[2] ) ) {
-                                $column = preg_replace( '/^mt_/', '', $arg_array[0] );
-                                // $extras = $arg_array[1] . '=' . $column . '_' . $arg_array[1] . ' AND ';
-                                $extras = $arg_array[1] . '=' . $column . '.' . $arg_array[1] . ' AND ';
+                        if ( isset( $arg_array[1] ) && is_string( $arg_array[ 1 ] ) ) {
+                            if ( is_array( $arg_array[ 2 ] ) ) {
+                                $column = ltrim( $arg_array[ 0 ], 'mt_' );
+                                $extras = $arg_array[ 1 ] . '=' . $column . '.' . $arg_array[ 1 ] . ' AND ';
                                 $expression = '';
-                                if ( is_array( $arg_array[2] ) && __is_hash( $arg_array[2] ) ) {
-                                    foreach ( $arg_array[2] as $key => $val ) {
+                                if ( is_array( $arg_array[ 2 ] ) && __is_hash( $arg_array[ 2 ] ) ) {
+                                    foreach ( $arg_array[ 2 ] as $key => $val ) {
                                         if ( $expression ) $expression .= ' AND ';
                                         if ( is_array( $val ) && __is_hash( $val ) && ( count( $val ) === 1 ) ) {
                                             foreach ( $val as $op => $value ) {
@@ -4204,7 +4196,6 @@ class DynamicMTML {
                                                         $expression .= "$column.{$key} {$op} ";
                                                     } else {
                                                         $op = strtoupper( $op );
-                                                        // $op = preg_replace( '/_/', ' ', $op );
                                                         $op = strtr( $op, '_', ' ' );
                                                         $expression .= " {$column}.{$key} {$op} '{$value}' ";
                                                     }
@@ -4213,7 +4204,6 @@ class DynamicMTML {
                                         } else {
                                             $val = $this->escape( $val );
                                             $val = $this->__ts2db( $key, $val );
-                                            //$expression .= " {$column}_{$key}='$val'";
                                             $expression .= " {$column}.{$key}='$val'";
                                         }
                                     }
@@ -4255,7 +4245,7 @@ class DynamicMTML {
             $prefix = $obj->_prefix;
         } else {
             $prefix = $obj->_table;
-            $prefix = preg_replace( '/^mt_/', '', $prefix );
+            $prefix = ltrim( $prefix, 'mt_' );
             $prefix .= '_';
         }
         if (! $this->run_callbacks( "{$do}_permission_filter.{$class}", $this->mt(), $this->ctx(), $this->args ) ) {
