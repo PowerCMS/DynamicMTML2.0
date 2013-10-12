@@ -606,18 +606,20 @@ class DynamicMTML {
                                 $plugins_dir_path[ $plugin_key ] = $plugin_base;
                                 $plugin_php_dir = $plugin_base . DIRECTORY_SEPARATOR . 'php';
                                 $config_php     = $plugin_php_dir . DIRECTORY_SEPARATOR . 'config.php';
-                                $config_yaml    = $plugin_base . DIRECTORY_SEPARATOR . 'config.yaml';
-                                if ( file_exists( $config_yaml ) ) {
-                                    if ( $spyc ) {
-                                        $config = Spyc::YAMLLoad( $config_yaml );
-                                        if ( $config ) {
-                                            $config[ 'plugin_path' ] = $plugin_base;
-                                            if (! file_exists( $config_php ) ) {
-                                                $config = $this->__adjust_callbacks( $config );
+                                if ( $this->config( 'DynamicLoadYAML' ) ) {
+                                    $config_yaml    = $plugin_base . DIRECTORY_SEPARATOR . 'config.yaml';
+                                    if ( file_exists( $config_yaml ) ) {
+                                        if ( $spyc ) {
+                                            $config = Spyc::YAMLLoad( $config_yaml );
+                                            if ( $config ) {
+                                                $config[ 'plugin_path' ] = $plugin_base;
+                                                if (! file_exists( $config_php ) ) {
+                                                    $config = $this->__adjust_callbacks( $config );
+                                                }
+                                                $plugins_config[ $plugin_key ] = $config;
+                                            } else {
+                                                $config = array();
                                             }
-                                            $plugins_config[ $plugin_key ] = $config;
-                                        } else {
-                                            $config = array();
                                         }
                                     }
                                 }
