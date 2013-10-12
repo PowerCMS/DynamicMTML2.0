@@ -180,6 +180,12 @@ sub _flush_dynamic_cache {
             unlink $cache;
             $do = 1;
         }
+    } elsif ( $driver && ( lc( $driver ) eq 'session' ) ) {
+        my @session = MT->model( 'session' )->load( { id => { like => "${prefix}%" } } );
+        for my $sess ( @session ) {
+            $sess->remove or die $sess->errstr;
+            $do = 1;
+        }
     }
     if ( $app->param( 'return_args' ) ) {
         if ( $do ) {

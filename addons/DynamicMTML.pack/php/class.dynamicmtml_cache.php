@@ -3,6 +3,7 @@ class DynamicCache extends DynamicMTML {
 
     protected $driver;
     public $ttl;
+    public $prefix;
 
     function __construct ( $app = NULL, $driver = NULL ) {
         $this->ttl = $app->config( 'DynamicCacheTTL' );
@@ -13,10 +14,16 @@ class DynamicCache extends DynamicMTML {
         require_once( "class.dynamicmtml_cache_${driver}.php" );
         $driver = new $class( $app );
         $this->driver = $driver;
+        $this->prefix = $app->config( 'DynamicCachePrefix' );
         $app->cache_driver = $this;
     }
 
     function get ( $key, $ttl = NULL ) {
+        if ( $prefix = $this->prefix ) {
+            if ( strpos( $key, $prefix ) !== 0 ) {
+                $key = "${prefix}_${key}";
+            }
+        }
         $value = $this->driver->get( $key );
         $type = gettype( $value );
         if ( $type === 'array' ) {
@@ -56,10 +63,20 @@ class DynamicCache extends DynamicMTML {
     }
 
     function set ( $key, $value, $ttl = NULL ) {
+        if ( $prefix = $this->prefix ) {
+            if ( strpos( $key, $prefix ) !== 0 ) {
+                $key = "${prefix}_${key}";
+            }
+        }
         $this->driver->set( $key, $value, $ttl );
     }
 
     function remove ( $key ) {
+        if ( $prefix = $this->prefix ) {
+            if ( strpos( $key, $prefix ) !== 0 ) {
+                $key = "${prefix}_${key}";
+            }
+        }
         $this->driver->remove( $key );
     }
 

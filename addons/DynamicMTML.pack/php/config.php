@@ -25,6 +25,7 @@ class DynamicMTML_pack extends MTPlugin {
             'DynamicCacheObjects' => array( 'default' => 'template,category' ),
             'DynamicMemcachedServers' => array( 'default' => '' ),
             'DynamicMemcachedCompressed' => array( 'default' => '' ),
+            'DynamicLoadYAML' => array( 'default' => '' ),
         ),
         'settings' => array( // PluginSettings
             'example_setting' => array( 'default' => 1 ),
@@ -131,6 +132,9 @@ class DynamicMTML_pack extends MTPlugin {
             }
             $prefix = $this->app->config( 'DynamicCachePrefix' );
             $this->app->cache_prefix = $prefix;
+            if ( $cachedriver === 'session' ) {
+                return FALSE;
+            }
             $key = "${prefix}_config";
             $data = $driver->get( $key );
             if ( is_array( $data ) ) {
@@ -188,18 +192,22 @@ class DynamicMTML_pack extends MTPlugin {
     function pre_resolve_url ( $mt, $ctx, $args ) {
         if ( $driver = $this->app->cache_driver ) {
             $app = $this->app;
-            $cfg_objects = $app->config( 'DynamicCacheObjects' );
-            if ( $objects = explode( ',', $cfg_objects ) ) {
-                $app->stash( 'cfg_cache_objects', $objects );
+            if ( $cfg_objects = $app->config( 'DynamicCacheObjects' ) ) {
+                if ( $objects = explode( ',', $cfg_objects ) ) {
+                    $app->stash( 'cfg_cache_objects', $objects );
+                }
             }
-            $file = md5( $app->stash( 'file' ) );
-            $prefix = $this->app->cache_prefix;
-            $key = "${prefix}_fileinfo_" . $file;
-            require_once( "class.mt_fileinfo.php" );
-            $data = $driver->get( $key );
-            if (! $data ) return;
-            $app->stash( 'using_cached_fileinfo', 1 );
-            $app->stash( 'fileinfo', $data );
+            $cachedriver = strtolower( $app->config( 'DynamicCacheDriver' ) );
+            if (! $cachedriver !== 'session' ) {
+                $file = md5( $app->stash( 'file' ) );
+                $prefix = $this->app->cache_prefix;
+                $key = "${prefix}_fileinfo_" . $file;
+                require_once( "class.mt_fileinfo.php" );
+                $data = $driver->get( $key );
+                if (! $data ) return;
+                $app->stash( 'using_cached_fileinfo', 1 );
+                $app->stash( 'fileinfo', $data );
+            }
             if (! $cfg_objects ) return;
             // TODO::author logged in
             foreach ( $objects as $obj ) {
@@ -212,6 +220,7 @@ class DynamicMTML_pack extends MTPlugin {
                     }
                 }
             }
+            $app->stash( 'using_cached_objects', 1 );
         }
     }
 
@@ -226,6 +235,8 @@ class DynamicMTML_pack extends MTPlugin {
                 $file = md5( $app->stash( 'file' ) );
                 $key = "${prefix}_fileinfo_" . $file;
                 $driver->set( $key, $data );
+            }
+            if (! $app->stash( 'using_cached_objects' ) ) {
                 // TODO::author logged in
                 foreach ( $objects as $obj ) {
                     $col = strtolower( "${obj}_id" );

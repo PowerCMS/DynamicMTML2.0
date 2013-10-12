@@ -158,7 +158,8 @@ class DynamicMTML {
             }
         }
         if (! function_exists( 'offset_time' ) ) {
-            require_once( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . 'mt_util.php' );
+            require_once( dirname( __FILE__ ) . DIRECTORY_SEPARATOR
+                . 'lib' . DIRECTORY_SEPARATOR . 'mt_util.php' );
         }
     }
 
@@ -578,11 +579,13 @@ class DynamicMTML {
         $functions = array();        // array ( 'tagname' => array( 'pluginkey' => 'hdlr_name' ), ...
         $modifiers = array();        // array ( 'tagname' => array( 'pluginkey' => 'hdlr_name' ), ...
         $pluginpath = $this->config( 'pluginpath' );
-        $spyc = __cat_file( array( dirname( __FILE__ ), 'extlib', 'spyc', 'spyc.php' ) );
-        if ( file_exists( $spyc ) ) {
-            require_once( $spyc );
-        } else {
-            $spyc = NULL;
+        if ( $this->config( 'DynamicLoadYAML' ) ) {
+            $spyc = __cat_file( array( dirname( __FILE__ ), 'extlib', 'spyc', 'spyc.php' ) );
+            if ( file_exists( $spyc ) ) {
+                require_once( $spyc );
+            } else {
+                $spyc = NULL;
+            }
         }
         sort( $pluginpath );
         foreach ( $pluginpath as $plugin_dir ) {
@@ -1819,17 +1822,14 @@ class DynamicMTML {
             if (! isset( $permission ) ) {
                 if ( $perm_obj->blog_id == $blog_id ) {
                     return 1;
-                    break;
                 } elseif ( preg_match( "/('administer'|'administer_website')/",
                         $perm_obj->permission_permissions, $match ) ) {
                     return 1;
-                    break;
                 }
             } else {
                 if ( preg_match( "/('$permission'|'administer'|'administer_website'|'administer_blog')/",
                         $perm_obj->permission_permissions, $match ) ) {
                     return 1;
-                    break;
                 }
             }
         }
@@ -1885,11 +1885,11 @@ class DynamicMTML {
         }
         $query = rtrim( $query, '&' );
         if ( preg_match( '/(^.*&)(' . $param . '=.*$)/', $query, $match ) ) {
-            $pre = $match[1];
+            $pre = $match[ 1 ];
             $after;
-            $next = $match[2];
+            $next = $match[ 2 ];
             if ( preg_match( '/&(.*$)/', $next, $match ) ) {
-                $after = $match[1];
+                $after = $match[ 1 ];
             }
             $query = $pre . $after;
             if ( preg_match( '/(^.*&)(' . $param . '=.*$)/', $query ) ) {

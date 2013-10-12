@@ -647,28 +647,30 @@ sub _clear_dynamic_cache {
         if ( $memcache ) {
             $memcache->delete( $key );
         }
+    } elsif ( lc( $driver ) eq 'session' ) {
+        if ( my $session = MT->model( 'session' )->load( { id => $key } ) ) {
+            $session->remove or die $session->errstr;
+        }
     }
 }
 
 sub _get_memcached_instance {
     my $app = MT->instance;
-    my $memcache = MT->request( 'DynamicMemcachedDriver' );
+    my $memcache = MT->request( 'DynamicMemcachedServers' );
     if (! $memcache ) {
-        my $default = $app->config( 'MemcachedServers' );
-        my $server = $app->config( 'DynamicMemcachedServer' );
-        my $port = $app->config( 'DynamicMemcachedPort' );
+        my @default = MT->config->MemcachedServers;
+        my @server  =  MT->config->DynamicMemcachedServers;
         require MT::Memcached;
-        if ( $server ) {
-            $server .= ':' . $port if $port;
-            $app->config( 'MemcachedServers', $server );
+        if ( @server ) {
+            $app->config( 'MemcachedServers', @server );
             $memcache = MT::Memcached->new();
-            $app->config( 'MemcachedServers', $default );
+            $app->config( 'MemcachedServers', @default );
         } else {
             $memcache = MT::Memcached->instance;
         }
     }
     if ( defined $memcache ) {
-        MT->request( 'DynamicMemcachedDriver', $memcache );
+        MT->request( 'DynamicMemcachedServers', $memcache );
     }
     return $memcache;
 }

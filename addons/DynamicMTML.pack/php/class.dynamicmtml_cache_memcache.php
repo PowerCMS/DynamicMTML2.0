@@ -101,7 +101,7 @@ class DynamicCacheMemcache extends DynamicCache {
             if ( is_array( $value ) ) {
                 foreach ( $value as $chache => $value ) {
                     $pos = strpos( $chache, $prefix );
-                    if ( $pos !== FALSE ) {
+                    if ( $pos === 0 ) {
                         if ( $res = $this->remove( $chache ) ) {
                             $do = TRUE;
                         } else {

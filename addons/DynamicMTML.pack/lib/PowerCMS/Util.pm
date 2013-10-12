@@ -449,7 +449,11 @@ sub upload {
             $fmgr->mkpath( $dir ) or return MT->trans_error( "Error making path '[_1]': [_2]",
                                     $out, $fmgr->errstr );
         }
-        my $temp  = "$out.new";
+        my $NoTempFiles = MT->config->NoTempFiles;
+        my $temp = $out;
+        if (! $NoTempFiles ) {
+            $temp = "$out.new";
+        }
         my $umask = $app->config( 'UploadUmask' );
         my $old   = umask( oct $umask );
         open( my $fh, ">$temp" ) or die "Can't open $temp!";
@@ -466,7 +470,9 @@ sub upload {
             print $fh $buffer;
         }
         close( $fh );
-        $fmgr->rename( $temp, $out );
+        if (! $NoTempFiles ) {
+            $fmgr->rename( $temp, $out );
+        }
         umask( $old );
         my $user = $params->{ author };
         $user = current_user( $app ) unless defined $user;
@@ -734,11 +740,14 @@ sub write2file {
         $fmgr->mkpath( $dir ) or return 0; # MT->trans_error( "Error making path '[_1]': [_2]",
                                 # $path, $fmgr->errstr );
     }
-    $fmgr->put_data( $data, "$path.new", $type );
-    if ( $fmgr->rename( "$path.new", $path ) ) {
-        if ( $fmgr->exists( $path ) ) {
-            return 1;
-        }
+    if ( MT->config->NoTempFiles ) {
+        $fmgr->put_data( $data, $path, $type );
+    } else {
+        $fmgr->put_data( $data, "$path.new", $type );
+        $fmgr->rename( "$path.new", $path );
+    }
+    if ( $fmgr->exists( $path ) ) {
+        return 1;
     }
     return 0;
 }
