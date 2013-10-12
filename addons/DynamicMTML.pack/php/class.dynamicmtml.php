@@ -589,7 +589,7 @@ class DynamicMTML {
             if ( is_dir( $plugin_dir ) ) {
                 if ( $dh = opendir( $plugin_dir ) ) {
                     while ( ( $dir = readdir( $dh ) ) !== FALSE ) {
-                        if ( $dir[ 0 ] === '.' ) {
+                        if ( $dir[ 0 ] !== '.' ) {
                             $plugin_base = $plugin_dir . DIRECTORY_SEPARATOR . $dir;
                             $plugin = NULL;
                             $config = array();
