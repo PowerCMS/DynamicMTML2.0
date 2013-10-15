@@ -145,6 +145,7 @@ tags:
         SetErrorHandler: $dynamicmtml::DynamicMTML::Tags::_hdlr_set_error
         StripTags: $dynamicmtml::DynamicMTML::Tags::_hdlr_strip_tags
         StripPHP: $dynamicmtml::DynamicMTML::Tags::_hdlr_strip_php
+        BuildCache: $dynamicmtml::DynamicMTML::Tags::_hdlr_buildcache
     function:
         ML: $dynamicmtml::DynamicMTML::Tags::_hdlr_raw_mtml_tag
         MTML: $dynamicmtml::DynamicMTML::Tags::_hdlr_raw_mtml_tag

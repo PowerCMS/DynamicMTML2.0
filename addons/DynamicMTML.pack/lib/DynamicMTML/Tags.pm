@@ -925,6 +925,35 @@ sub _hdlr_strip_php {
     return "<MTStripPHP>${text}</MTStripPHP>";
 }
 
+sub _hdlr_buildcache {
+    my ( $ctx, $args, $cond ) = @_;
+    my $ttl = $args->{ ttl };
+    my $key = $args->{ key };
+    my $cache = MT->request( 'buildcache:' . $key );
+    return $cache if $cache;
+    my $in_request = $args->{ in_request };
+    my $driver;
+    if (! $in_request ) {
+        require DynamicMTML::Cache;
+        my $driver = DynamicMTML::Cache->new;
+        my $value = $driver->get( $key, $ttl );
+        if ( $value ) {
+            if (! MT->config( 'DynamicCacheDriver' ) ) {
+                $value = utf8_on( $value );
+            }
+            MT->request( 'buildcache:' . $key, $value );
+            return $value;
+        }
+    }
+    my $value = $ctx->stash( 'builder' )->build( $ctx, $ctx->stash( 'tokens' ), $cond );
+    my $updated_at = $args->{ updated_at };
+    if (! $in_request ) {
+        $driver->set( $key, $value, $ttl, $updated_at );
+    }
+    MT->request( 'buildcache:' . $key, $value );
+    return $value;
+}
+
 sub _hdlr_error {
     my ( $ctx, $args, $cond ) = @_;
     my $message = $args->{ message };

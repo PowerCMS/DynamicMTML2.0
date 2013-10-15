@@ -27,6 +27,7 @@ sub new {
             die $@;
         }
     } else {
+        require MT::Cache::Negotiate;
         return MT::Cache::Negotiate->new( ttl => $ttl );
     }
     my $obj = bless {}, $class;

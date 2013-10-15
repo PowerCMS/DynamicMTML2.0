@@ -56,6 +56,7 @@ class DynamicMTML_pack extends MTPlugin {
                                  'striptags' => 'striptags',
                                  'buildrecurs' => 'buildrecurs',
                                  'stripphp' => 'stripphp',
+                                 'buildcache' => 'buildcache',
                                  ),
             'function' => array( 'authorlanguage' => 'authorlanguage',
                                  'useragent' => 'useragent',
@@ -474,6 +475,11 @@ class DynamicMTML_pack extends MTPlugin {
 
     function stripphp ( $args, $content, &$ctx, &$repeat ) {
         return $content;
+    }
+
+    function buildcache ( $args, $content, &$ctx, &$repeat ) {
+        require_once( $this->tags_dir() . 'block.mtbuildcache.php' );
+        return smarty_block_mtbuildcache( $args, $content, $ctx, $repeat );
     }
 
     // Function Tags
