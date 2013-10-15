@@ -221,7 +221,7 @@ sub _post_save_author {
     if ( my $driver = MT->config( 'DynamicCacheDriver' ) ) {
         my $prefix = MT->config( 'DynamicCachePrefix' );
         my $key = $prefix . '_author_' . $obj->id;
-        _clear_dynamic_cache( $key );
+        _clear_dynamic_cache( $key, 'author' );
     }
     return 1;
 }
@@ -245,7 +245,7 @@ sub _post_save_blog {
         if ( my $driver = MT->config( 'DynamicCacheDriver' ) ) {
             my $prefix = MT->config( 'DynamicCachePrefix' );
             my $key = $prefix . '_blog_' . $obj->id;
-            _clear_dynamic_cache( $key );
+            _clear_dynamic_cache( $key, $obj->class );
         }
         require File::Spec;
         require MT::Template;
@@ -386,7 +386,7 @@ sub _post_save_template {
     if ( my $driver = MT->config( 'DynamicCacheDriver' ) ) {
         my $prefix = MT->config( 'DynamicCachePrefix' );
         my $key = $prefix . '_template_' . $obj->id;
-        _clear_dynamic_cache( $key );
+        _clear_dynamic_cache( $key, 'template' );
     }
     return 1;
 }
@@ -608,6 +608,7 @@ sub _cb_post_change {
         }
         return unless $target;
         if ( grep( /^$target$/, @objects ) ) {
+            my $orig_tgt = $target;
             my $key;
             if ( $target eq 'page' ) {
                 $target = 'entry';
@@ -624,15 +625,17 @@ sub _cb_post_change {
             } else {
                 $key = $prefix . '_' . $target . '_' . $obj->id;
             }
-            _clear_dynamic_cache( $key );
+            _clear_dynamic_cache( $key, $orig_tgt );
         }
     }
     return 1;
 }
 
 sub _clear_dynamic_cache {
-    my $key = shift;
+    my ( $key, $obj ) = @_;
     my $driver = MT->config( 'DynamicCacheDriver' );
+    my $prefix = MT->config( 'DynamicCachePrefix' );
+    my $update_key = $prefix . '_upldate_key_' . $obj if $obj;
     if ( lc( $driver ) eq 'file' ) {
         require File::Spec;
         my $cache = File::Spec->catdir( powercms_files_dir_path(), 'cache', $key );
@@ -641,15 +644,48 @@ sub _clear_dynamic_cache {
         if ( $fmgr->exists( $cache ) ) {
             $fmgr->delete( $cache );
         }
+        if ( $obj ) {
+            my $update_cache = File::Spec->catdir( powercms_files_dir_path(), 'cache', $update_key );
+            if ( $fmgr->exists( $update_cache ) ) {
+                my $update_keys = $fmgr->get_data( $update_cache );
+                if ( $update_keys ) {
+                    my @keys = split( /,/, $update_keys );
+                    for my $key ( @keys ) {
+                        my $cache = File::Spec->catdir( powercms_files_dir_path(), 'cache', $key );
+                        if ( $fmgr->exists( $cache ) ) {
+                            $fmgr->delete( $cache );
+                        }
+                    }
+                    $fmgr->delete( $update_cache );
+                }
+            }
+        }
     } elsif ( lc( $driver ) =~ /^memcache/ ) {
         my $app = MT->instance;
         my $memcache = _get_memcached_instance();
         if ( $memcache ) {
             $memcache->delete( $key );
+            if ( $obj ) {
+                my $update_keys = $memcache->get( $update_key );
+                if ( $update_keys ) {
+                    my @keys = split( /,/, $update_keys );
+                    for my $key ( @keys ) {
+                        $memcache->delete( $key );
+                    }
+                    $memcache->delete( $update_key );
+                }
+            }
         }
     } elsif ( lc( $driver ) eq 'session' ) {
-        if ( my $session = MT->model( 'session' )->load( { id => $key } ) ) {
+        if ( my $session = MT->model( 'session' )->load( { id => $key, kind => 'CO' } ) ) {
             $session->remove or die $session->errstr;
+        }
+        if ( $obj ) {
+            my @session = MT->model( 'session' )->load( { id => { like => "${prefix}%" },
+                                                          name => $update_key, kind => 'CO' } );
+            for my $sess ( @session ) {
+                $sess->remove or die $sess->errstr;
+            }
         }
     }
 }

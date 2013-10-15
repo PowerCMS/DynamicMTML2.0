@@ -55,9 +55,25 @@ class DynamicCacheMemcache extends DynamicCache {
         return $this->memcache->get( $key );
     }
 
-    function set ( $key, $value, $ttl = NULL ) {
+    function set ( $key, $value, $ttl = NULL, $updated_at = NULL ) {
         if (! $ttl ) {
             $ttl = $this->ttl;
+        }
+        if ( $updated_at ) {
+            $update_key = $this->prefix . '_upldate_key_' . $updated_at;
+            $update_keys = $this->get( $update_key );
+            if ( $update_keys ) {
+                $update_keys = explode( ',', $update_keys );
+            }
+            if ( $update_keys && is_array( $update_keys ) ) {
+                if (! in_array( $key, $update_keys ) ) {
+                    array_push( $update_keys, $key );
+                }
+                $update_keys = join( ',', $update_keys );
+            } else {
+                $update_keys = $key;
+            }
+            $this->memcache->set( $update_key, $update_keys );
         }
         return $this->memcache->set( $key, $value, $this->compressed, $ttl );
     }

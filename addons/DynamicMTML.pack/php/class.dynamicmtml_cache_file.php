@@ -29,11 +29,27 @@ class DynamicCacheFile extends DynamicCache {
         return file_get_contents( $file );
     }
 
-    function set ( $key, $value ) {
+    function set ( $key, $value, $ttl = NULL, $updated_at = NULL ) {
         $cache_dir = $this->cache_dir;
         $file = __cat_file( $cache_dir, $key );
         if ( is_object( $value ) || is_array( $value ) ) {
             $value = serialize( $value );
+        }
+        if ( $updated_at ) {
+            $update_key = $this->prefix . '_upldate_key_' . $updated_at;
+            $update_keys = $this->get( $update_key );
+            if ( $update_keys ) {
+                $update_keys = explode( ',', $update_keys );
+            }
+            if ( $update_keys && is_array( $update_keys ) ) {
+                if (! in_array( $key, $update_keys ) ) {
+                    array_push( $update_keys, $key );
+                }
+                $update_keys = join( ',', $update_keys );
+            } else {
+                $update_keys = $key;
+            }
+            $this->set( $update_key, $update_keys );
         }
         file_put_contents( $file, $value );
     }

@@ -62,13 +62,13 @@ class DynamicCache extends DynamicMTML {
         return $value;
     }
 
-    function set ( $key, $value, $ttl = NULL ) {
+    function set ( $key, $value, $ttl = NULL, $updated_at = NULL ) {
         if ( $prefix = $this->prefix ) {
             if ( strpos( $key, $prefix ) !== 0 ) {
                 $key = "${prefix}_${key}";
             }
         }
-        $this->driver->set( $key, $value, $ttl );
+        $this->driver->set( $key, $value, $ttl, $updated_at );
     }
 
     function remove ( $key ) {

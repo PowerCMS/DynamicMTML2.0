@@ -28,7 +28,7 @@ class DynamicCacheSession extends DynamicCache {
         return FALSE;
     }
 
-    function set ( $key, $value, $ttl = NULL ) {
+    function set ( $key, $value, $ttl = NULL, $updated_at = NULL ) {
         if (! $ttl ) {
             $ttl = $this->ttl;
         }
@@ -42,6 +42,9 @@ class DynamicCacheSession extends DynamicCache {
         $session->session_start = $duration;
         $session->session_duration = $duration + $ttl;
         $session->data = $value;
+        if ( $updated_at ) {
+            $session->name = $this->prefix . '_upldate_key_' . $updated_at;
+        }
         if ( $this->get( $key, NULL, TRUE ) ) {
             return $session->Update();
         }
