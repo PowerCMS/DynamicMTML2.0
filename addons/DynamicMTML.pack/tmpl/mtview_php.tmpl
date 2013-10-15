@@ -1,8 +1,11 @@
 <?php
+## DynamicMTML generated this part; don't remove this line! ##
+
+// DynamicMTML (C) 2010-2013 Alfasado Inc.
 
     // ini_set( 'memory_limit', '16M' );
     // <version><$MTPluginVersion component="DynamicMTML"$></version>
-    
+
     $blog_id      = <$mt:BlogID$>;
     $server_cache = <$mt:BlogDynamicSearchCacheExpiration$>;
     $size_limit   = 524288;
@@ -16,15 +19,13 @@
     $extension    = '<$mt:BlogFileExtension encode_php="q"$>';
     $use_cache    = <$mt:BlogDynamicMTMLCache$>;
     $conditional  = <$mt:BlogDynamicMTMLConditional$>;
-    // if alias...
-    $alias_name = ''; 
+    // If alias...
+    $alias_name = '';
     $alias_path = '';
     <$mt:TableColumnValue stash="blog" column="is_members" setvar="requires_login"$>
     <mt:If name="requires_login">$require_login = 1;<mt:Else>$require_login = NULL;</mt:Else></mt:If>
     <mt:IfBlogDynamicCache>$dynamic_caching = 1;<mt:Else>$dynamic_caching = NULL;</mt:Else></mt:IfBlogDynamicCache>
     <mt:IfBlogDynamicConditional>$dynamic_conditional = 1;<mt:Else>$dynamic_conditional = NULL;</mt:Else></mt:IfBlogDynamicConditional>
-    // require_once ( $plugin_path . 'class.dynamicmtml.php' );
-    // require_once ( $plugin_path . 'dynamicmtml.util.php' );
     require_once ( $plugin_path . 'dynamicmtml.run.php' );
 
 ## DynamicMTML generated this part; don't remove this line! /DynamicMTML ##

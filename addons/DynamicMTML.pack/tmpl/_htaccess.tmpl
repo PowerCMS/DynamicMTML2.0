@@ -88,7 +88,9 @@ DirectoryIndex <$MTBlogRelativeURL$><$MTDynamicSiteBootstrapper$>
   ErrorDocument 403 <$MTBlogRelativeURL$><$MTDynamicSiteBootstrapper$>
 </IfModule>
 </FilesMatch>
-<FilesMatch (^(|[^.]+)|\.html?)$>
+#<FilesMatch (?:^(?:|[^.]+)|\.(?i:html?))$>
+# Backcompat for old libpcre.
+<FilesMatch (^(|[^.]+)|\.[Hh][Tt][Mm][Ll]?)$>
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteRule ^ <$MTBlogRelativeURL$><$MTDynamicSiteBootstrapper$> [L]
