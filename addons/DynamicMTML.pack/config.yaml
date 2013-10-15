@@ -58,6 +58,7 @@ config_settings:
     DynamicMemcachedServers:
     DynamicMemcachedCompressed:
     DynamicLoadYAML:
+    DynamicContent2gzip:
 object_types:
     blog:
         dynamic_mtml: boolean

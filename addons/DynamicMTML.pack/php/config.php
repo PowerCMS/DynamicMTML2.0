@@ -26,6 +26,7 @@ class DynamicMTML_pack extends MTPlugin {
             'DynamicMemcachedServers' => array( 'default' => '' ),
             'DynamicMemcachedCompressed' => array( 'default' => '' ),
             'DynamicLoadYAML' => array( 'default' => '' ),
+            'DynamicContent2gzip' => array( 'default' => 0 ),
         ),
         'settings' => array( // PluginSettings
             'example_setting' => array( 'default' => 1 ),
@@ -118,6 +119,9 @@ class DynamicMTML_pack extends MTPlugin {
     // Callbacks
     function configure_from_db ( &$mt, $ctx, $args, $cfg ) {
         // $cfg =& $mt->config;
+        if ( isset( $cfg[ 'dynamiccontent2gzip' ] ) ){
+            ini_set( 'zlib.output_compression', 'On' );
+        }
         if ( isset( $cfg[ 'allowconnectotherdb' ] ) ){
             return FALSE;
         }
