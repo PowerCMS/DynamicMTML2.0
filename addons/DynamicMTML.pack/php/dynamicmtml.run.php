@@ -61,7 +61,7 @@
     $secure = !empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off'
               /* || isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443 */
             ? 's' : '';
-    $base   = "http{$secure}://{$_SERVER[ 'HTTP_HOST' ]}";
+    $base   = "http{$secure}://{$_SERVER[ 'SERVER_NAME' ]}";
     $port   = (int) $_SERVER[ 'SERVER_PORT' ];
     if (! empty( $port ) && $port !== ( $secure === '' ? 80 : 443 ) ) $base .= ":$port";
     $request_uri = NULL;
