@@ -20,6 +20,7 @@ sub get {
     }
     my $session = MT->model( 'session' )->load( { id => $key, kind => 'CO' } );
     if ( $session ) {
+        my $data = $session->data;
         if ( $ttl ) {
             my $start = $session->start;
             if ( $start < ( time - $ttl ) ) {
@@ -34,7 +35,7 @@ sub get {
                 return undef;
             }
         }
-        return utf8_on( $session->data );
+        return utf8_on( $data );
     }
     return undef;
 }
@@ -50,6 +51,7 @@ sub set {
     $session->start( time );
     $ttl = $class->{ ttl } unless $ttl;
     $session->duration( time + $ttl );
+    $session->data( $value );
     if ( $updated_at ) {
         my $update_key = $class->{ prefix } . '_upldate_key_' . $updated_at;
         $session->name( $update_key );
