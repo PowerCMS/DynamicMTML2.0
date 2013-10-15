@@ -2,6 +2,7 @@ package DynamicMTML::CMS;
 
 use strict;
 use warnings;
+use MT::FileMgr;
 # use lib qw( plugins/DynamicMTML.pack/lib );
 use PowerCMS::Util qw( get_children_files powercms_files_dir powercms_files_dir_path
                        is_user_can site_path register_templates_to make_dir );
@@ -82,6 +83,7 @@ sub _flush_dynamic_cache {
     if (! _dynamic_permission() ) {
         return $app->trans_error( 'Permission denied.' );
     }
+    my $fmgr = MT::FileMgr->new( 'Local' ) or die MT::FileMgr->errstr;
     my %param;
     $param{ page_title } = $plugin_dynamicmtml->translate( 'Flush Dynamic Cache' );
     $app->{ plugin_template_path } = File::Spec->catdir( $plugin_dynamicmtml->path, 'tmpl' );
@@ -113,79 +115,25 @@ sub _flush_dynamic_cache {
         if ( -d $cache_dir ) {
             my @caches = get_children_files( $cache_dir, "/$search/" );
             for my $cache ( @caches ) {
-                unlink $cache;
-                $do = 1;
+                if ( $fmgr->delete( $cache ) ) {
+                    $do = 1;
+                }
             }
         }
         my $templates_c = File::Spec->catdir( site_path( $blog ), 'templates_c' );
         if ( -d $templates_c ) {
             my @template = get_children_files( $templates_c );
             for my $tmpl ( @template ) {
-                unlink $tmpl;
-                $do = 1;
+                if ( $fmgr->delete( $tmpl ) ) {
+                    $do = 1;
+                }
             }
         }
     }
-    my $driver = MT->config( 'DynamicCacheDriver' );
-    my $prefix = MT->config( 'DynamicCachePrefix' );
-    if ( $driver && ( lc( $driver ) =~ /^memcache/ ) ) {
-        require DynamicMTML::Plugin;
-        my $memcache = DynamicMTML::Plugin::_get_memcached_instance();
-        my $driver = MT->config( 'MemcachedDriver' );
-        if ( $driver eq 'Cache::Memcached' ) {
-            my $slabs_all = $memcache->stats( [ 'slabs' ] );
-            my $server_slabs = $slabs_all->{ hosts } if $slabs_all;
-            for my $key ( keys %$server_slabs ) {
-                my $slab = $server_slabs->{ $key }->{ slabs };
-                my @slabs = split( /\n/, $slab );
-                my %all_items;
-                for my $str ( @slabs ) {
-                    if ( $str =~ m/^STAT(.*)?:/ ) {
-                        my $id = $1;
-                        $id =~ s/\s//g;
-                        $all_items{ $id } = $str
-                            if ( $id =~ m/^[0-9]{1,}$/ );
-                    }
-                }
-                for my $key ( keys %all_items ) {
-                    my $cm = "cachedump $key 10000";
-                    my $cache = $memcache->stats( $cm );
-                    next unless defined $cache;
-                    $cache = $cache->{ hosts };
-                    for my $key ( keys %$cache ) {
-                        my $items = $cache->{ $key };
-                        for my $item ( keys %$items ) {
-                            my $cache_item = $items->{ $item };
-                            next unless $cache_item;
-                            my @items = split( /\n/, $cache_item );
-                            for my $line ( @items ) {
-                                my $cache_key = $1 if ( $line =~ /^ITEM\s(.*?)\s/ );
-                                if ( $cache_key && $cache_key =~ /^$prefix/ ) {
-                                    $do = 1
-                                        if $memcache->delete( $cache_key );
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } else {
-            if ( $memcache->flush_all() ) {
-                $do = 1;
-            }
-        }
-    } elsif ( $driver && ( lc( $driver ) eq 'file' ) ) {
-        my @caches = get_children_files( $cache_dir, "/$prefix/" );
-        for my $cache ( @caches ) {
-            unlink $cache;
-            $do = 1;
-        }
-    } elsif ( $driver && ( lc( $driver ) eq 'session' ) ) {
-        my @session = MT->model( 'session' )->load( { id => { like => "${prefix}%" } } );
-        for my $sess ( @session ) {
-            $sess->remove or die $sess->errstr;
-            $do = 1;
-        }
+    if ( my $driver = MT->config( 'DynamicCacheDriver' ) ) {
+        require DynamicMTML::Cache;
+        my $dynamic_cache_driver = DynamicMTML::Cache->new();
+        $do = $dynamic_cache_driver->clear();
     }
     if ( $app->param( 'return_args' ) ) {
         if ( $do ) {

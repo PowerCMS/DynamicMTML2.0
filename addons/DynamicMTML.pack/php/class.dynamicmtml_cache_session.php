@@ -35,12 +35,12 @@ class DynamicCacheSession extends DynamicCache {
         if ( is_object( $value ) || is_array( $value ) ) {
             $value = serialize( $value );
         }
-        $duration = time();
+        $start = time();
         $session = new Session;
         $session->session_id = $key;
         $session->session_kind = 'CO';
-        $session->session_start = $duration;
-        $session->session_duration = $duration + $ttl;
+        $session->session_start = $start;
+        $session->session_duration = $start + $ttl;
         $session->data = $value;
         if ( $updated_at ) {
             $session->name = $this->prefix . '_upldate_key_' . $updated_at;
@@ -70,20 +70,43 @@ class DynamicCacheSession extends DynamicCache {
         $extra = array();
         $objects = $session->Find( $where, FALSE, FALSE, $extra );
         $do = FALSE;
+        $error;
         if ( $objects ) {
             foreach( $objects as $cache ) {
                 if ( $cache->Delete() ) {
                     $do = TRUE;
                 } else {
-                    return FALSE;
+                    $error = 1;
                 }
             }
         }
+        if ( $error ) return NULL;
         return $do;
     }
 
     function clear ( $flush = NULL, $debug = NULL ) {
         return $this->purge( TRUE );
+    }
+
+    function flush_by_key ( $key ) {
+        $prefix = $this->prefix;
+        $session = new Session;
+        $where = "session_id LIKE '${prefix}%' AND session_kind='CO' AND session_name='${key}'";
+        $extra = array();
+        $objects = $session->Find( $where, FALSE, FALSE, $extra );
+        $do = FALSE;
+        $error;
+        if ( $objects ) {
+            foreach( $objects as $cache ) {
+                if ( $cache->Delete() ) {
+                    $do = TRUE;
+                } else {
+                    $error = 1;
+                }
+            }
+        }
+        if ( $error ) return NULL;
+        return $do;
     }
 
 }

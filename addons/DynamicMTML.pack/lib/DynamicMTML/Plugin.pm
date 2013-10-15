@@ -1,6 +1,8 @@
 package DynamicMTML::Plugin;
 
 use strict;
+use warnings;
+use MT::FileMgr;
 # use lib qw( addons/DynamicMTML.pack/lib );
 use PowerCMS::Util qw( get_children_files powercms_files_dir plugin_template_path
                        powercms_files_dir_path site_path make_dir remove_item
@@ -43,6 +45,7 @@ sub _build_file {
     my $blog  = $args{ Blog };
     my $fi    = $args{ FileInfo };
     my $html  = $args{ Content };
+    my $fmgr = MT::FileMgr->new( 'Local' ) or die MT::FileMgr->errstr;
     if ( defined $blog ) {
         if ( $$html && $$html =~ /<\${0,1}mt/i ) {
             require Digest::MD5;
@@ -57,7 +60,7 @@ sub _build_file {
                     if ( -d $cache_dir ) {
                         my @caches = get_children_files( $cache_dir, "/$cache/" );
                         for my $cache ( @caches ) {
-                            unlink $cache;
+                            $fmgr->delete( $cache );
                         }
                     }
                 }
@@ -71,7 +74,7 @@ sub _build_file {
                     my $search = '_' . $path . '_';
                     my @template = get_children_files( $templates_c, "/$search/" );
                     for my $tmpl ( @template ) {
-                        unlink $tmpl;
+                        $fmgr->delete( $tmpl );
                     }
                 }
             }
@@ -98,8 +101,9 @@ sub _build_dynamic {
         my $cache_dir = File::Spec->catdir( $powercms_files_dir, 'cache' );
         if ( -d $cache_dir ) {
             my @caches = get_children_files( $cache_dir, "/$cache/" );
+            my $fmgr = MT::FileMgr->new( 'Local' ) or die MT::FileMgr->errstr;
             for my $cache ( @caches ) {
-                unlink $cache;
+                $fmgr->delete( $cache );
             }
         }
     }
@@ -121,7 +125,6 @@ sub _disable_dynamicmtml {
         my %args = ( blog => $blog );
         my $htaccess_out = File::Spec->catdir( site_path( $blog ), '.htaccess' );
         my $dynamicmtml_out = File::Spec->catdir( site_path( $blog ), $mtview );
-        require MT::FileMgr;
         require MT::Template;
         my $rebuild;
         my $fmgr = MT::FileMgr->new( 'Local' ) or die MT::FileMgr->errstr;
@@ -140,7 +143,7 @@ sub _disable_dynamicmtml {
                 $htaccess = build_tmpl( $app, $tmpl, \%args );
                 my $contents = read_from_file( $htaccess_out );
                 if (! $fmgr->content_is_updated( $contents, \$htaccess ) ) {
-                    if (! unlink $htaccess_out ) {
+                    if (! $fmgr->delete( $htaccess_out ) ) {
                         # $app->add_return_arg( no_remove_htaccess => 1 );
                         # But MT create a .htaccess.
                     }
@@ -170,11 +173,11 @@ sub _disable_dynamicmtml {
                 my $tmpl = read_from_file( $dynamicmtml );
                 $dynamicmtml = build_tmpl( $app, $tmpl, \%args );
                 if (! $fmgr->content_is_updated( $contents, \$dynamicmtml ) ) {
-                    unlink $dynamicmtml_out;
+                    $fmgr->delete( $dynamicmtml_out );
                 } else {
                     if ( $contents =~ s![\r\n]##\sDynamicMTML.*?/DynamicMTML\s##[\r\n]!!si ) {
                         if ( $contents eq '<?php?>' ) {
-                            unlink $dynamicmtml_out;
+                            $fmgr->delete( $dynamicmtml_out );
                         } else {
                             if (! write2file( $dynamicmtml_out, $contents ) ) {
                                 $app->add_return_arg( no_overwrite_mtview => 1 );
@@ -334,18 +337,17 @@ sub _post_save_blog {
         if ( $mtview_tmpl ) {
             $app->rebuild_indexes( Blog => $blog, Template => $mtview_tmpl );
         } else {
+            my $fmgr = MT::FileMgr->new( 'Local' ) or die MT::FileMgr->errstr;
             my $dynamicmtml = File::Spec->catdir( $tmpl_path, 'mtview_php.tmpl' );
             $tmpl = read_from_file( $dynamicmtml );
             $dynamicmtml = build_tmpl( $app, $tmpl, \%args );
             if (! $old_file || ( $mtview ne $old_file ) ) {
                 my $old_mtview = File::Spec->catdir( site_path( $blog ), $old_file );
-                if (-f $old_mtview ) {
-                    unlink $old_mtview;
+                if ( $fmgr->exists( $old_mtview ) ) {
+                    $fmgr->delete( $old_mtview );
                 }
             }
             my $dynamicmtml_out = File::Spec->catdir( site_path( $blog ), $mtview );
-            require MT::FileMgr;
-            my $fmgr = MT::FileMgr->new( 'Local' ) or die MT::FileMgr->errstr;
             if ( $fmgr->exists( $dynamicmtml_out ) ) {
                 if (! $fmgr->content_is_updated( $dynamicmtml_out, \$dynamicmtml ) ) {
                     return 1;
@@ -377,8 +379,9 @@ sub _post_save_template {
             if ( -d $templates_c ) {
                 my $search = '_mtml_tpl_id_' . $obj->id . '\.php';
                 my @template = get_children_files( $templates_c, "/$search/" );
+                my $fmgr = MT::FileMgr->new( 'Local' ) or die MT::FileMgr->errstr;
                 for my $tmpl ( @template ) {
-                    unlink $tmpl;
+                    $fmgr->delete( $tmpl );
                 }
             }
         }
@@ -636,79 +639,10 @@ sub _clear_dynamic_cache {
     my $driver = MT->config( 'DynamicCacheDriver' );
     my $prefix = MT->config( 'DynamicCachePrefix' );
     my $update_key = $prefix . '_upldate_key_' . $obj if $obj;
-    if ( lc( $driver ) eq 'file' ) {
-        require File::Spec;
-        my $cache = File::Spec->catdir( powercms_files_dir_path(), 'cache', $key );
-        require MT::FileMgr;
-        my $fmgr = MT::FileMgr->new( 'Local' );
-        if ( $fmgr->exists( $cache ) ) {
-            $fmgr->delete( $cache );
-        }
-        if ( $obj ) {
-            my $update_cache = File::Spec->catdir( powercms_files_dir_path(), 'cache', $update_key );
-            if ( $fmgr->exists( $update_cache ) ) {
-                my $update_keys = $fmgr->get_data( $update_cache );
-                if ( $update_keys ) {
-                    my @keys = split( /,/, $update_keys );
-                    for my $key ( @keys ) {
-                        my $cache = File::Spec->catdir( powercms_files_dir_path(), 'cache', $key );
-                        if ( $fmgr->exists( $cache ) ) {
-                            $fmgr->delete( $cache );
-                        }
-                    }
-                    $fmgr->delete( $update_cache );
-                }
-            }
-        }
-    } elsif ( lc( $driver ) =~ /^memcache/ ) {
-        my $app = MT->instance;
-        my $memcache = _get_memcached_instance();
-        if ( $memcache ) {
-            $memcache->delete( $key );
-            if ( $obj ) {
-                my $update_keys = $memcache->get( $update_key );
-                if ( $update_keys ) {
-                    my @keys = split( /,/, $update_keys );
-                    for my $key ( @keys ) {
-                        $memcache->delete( $key );
-                    }
-                    $memcache->delete( $update_key );
-                }
-            }
-        }
-    } elsif ( lc( $driver ) eq 'session' ) {
-        if ( my $session = MT->model( 'session' )->load( { id => $key, kind => 'CO' } ) ) {
-            $session->remove or die $session->errstr;
-        }
-        if ( $obj ) {
-            my @session = MT->model( 'session' )->load( { id => { like => "${prefix}%" },
-                                                          name => $update_key, kind => 'CO' } );
-            for my $sess ( @session ) {
-                $sess->remove or die $sess->errstr;
-            }
-        }
-    }
-}
-
-sub _get_memcached_instance {
-    my $app = MT->instance;
-    my $memcache = MT->request( 'DynamicMemcachedServers' );
-    if (! $memcache ) {
-        my @default = MT->config->MemcachedServers;
-        my @server  =  MT->config->DynamicMemcachedServers;
-        require MT::Memcached;
-        if ( @server ) {
-            $app->config( 'MemcachedServers', @server );
-            $memcache = MT::Memcached->new();
-            $app->config( 'MemcachedServers', @default );
-        } else {
-            $memcache = MT::Memcached->instance;
-        }
-    }
-    if ( defined $memcache ) {
-        MT->request( 'DynamicMemcachedServers', $memcache );
-    }
-    return $memcache;
+    require DynamicMTML::Cache;
+    my $dynamic_cache_driver = DynamicMTML::Cache->new();
+    $dynamic_cache_driver->remove( $key );
+    $dynamic_cache_driver->flush_by_key( $update_key );
 }
 
 1;

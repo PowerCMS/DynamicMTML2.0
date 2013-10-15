@@ -65,7 +65,8 @@ class DynamicCacheFile extends DynamicCache {
 
     function purge () {
         $cache_dir = $this->cache_dir;
-        $do = FALSE;
+        $do = NULL;
+        $error;
         if ( $ttl = $this->ttl ) {
             $prefix = $this->prefix;
             if ( $dh = opendir ( $cache_dir ) ) {
@@ -76,20 +77,25 @@ class DynamicCacheFile extends DynamicCache {
                     if ( strpos( $filename, $prefix ) === 0 ) {
                         $file = __cat_file( $cache_dir, $filename );
                         if ( ( time() - filemtime( $file ) ) > $ttl ) {
-                            unlink ( $file );
-                            $do = TRUE;
+                            if ( unlink ( $file ) ) {
+                                $do = TRUE;
+                            } else {
+                                $error = 1;
+                            }
                         }
                     }
                 }
                 closedir ( $dh );
             }
         }
+        if ( $error ) return FALSE;
         return $do;
     }
 
     function clear () {
         $cache_dir = $this->cache_dir;
-        $do = FALSE;
+        $do = NULL;
+        $error;
         $prefix = $this->prefix;
         if ( $dh = opendir ( $cache_dir ) ) {
             while ( $filename = readdir ( $dh ) ) {
@@ -98,12 +104,16 @@ class DynamicCacheFile extends DynamicCache {
                 }
                 if ( strpos( $filename, $prefix ) === 0 ) {
                     $file = __cat_file( $cache_dir, $filename );
-                    unlink ( $file );
-                    $do = TRUE;
+                    if ( unlink ( $file ) ) {
+                        $do = TRUE;
+                    } else {
+                        $error = 1;
+                    }
                 }
             }
             closedir ( $dh );
         }
+        if ( $error ) return FALSE;
         return $do;
     }
 

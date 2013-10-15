@@ -73,7 +73,7 @@ class DynamicCacheMemcache extends DynamicCache {
             } else {
                 $update_keys = $key;
             }
-            $this->memcache->set( $update_key, $update_keys );
+            $this->set( $update_key, $update_keys );
         }
         return $this->memcache->set( $key, $value, $this->compressed, $ttl );
     }
@@ -112,7 +112,8 @@ class DynamicCacheMemcache extends DynamicCache {
             var_dump( $all_keys );
             exit();
         }
-        $do = FALSE;
+        $do = NULL;
+        $error;
         foreach ( $all_keys as $key => $value ) {
             if ( is_array( $value ) ) {
                 foreach ( $value as $chache => $value ) {
@@ -121,12 +122,13 @@ class DynamicCacheMemcache extends DynamicCache {
                         if ( $res = $this->remove( $chache ) ) {
                             $do = TRUE;
                         } else {
-                            return FALSE;
+                            $error = 1;
                         }
                     }
                 }
             }
         }
+        if ( $error ) return FALSE;
         return $do;
     }
 

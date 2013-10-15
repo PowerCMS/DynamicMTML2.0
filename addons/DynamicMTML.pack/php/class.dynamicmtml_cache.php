@@ -87,6 +87,34 @@ class DynamicCache extends DynamicMTML {
     function clear () {
         $this->driver->clear();
     }
+
+    function flush_by_key ( $key ) {
+        $update_key = $this->prefix . '_upldate_key_' . $key;
+        if ( method_exists( $this->driver, 'flush_by_key' ) ) {
+            return $this->driver->flush_by_key( $update_key );
+        }
+        $update_keys = $this->driver->get( $update_key );
+        $do = FALSE;
+        $error;
+        if ( $update_keys ) {
+            $keys = explode( ',', $update_keys );
+            foreach ( $keys as $key ) {
+                if ( $this->driver->remove( $key ) ) {
+                    $do = TRUE;
+                } else {
+                    $error = 1;
+                }
+            }
+            if ( $this->driver->remove( $update_key ) ) {
+                $do = TRUE;
+            } else {
+                $error = 1;
+            }
+        }
+        if ( $error ) return NULL;
+        return $do;
+    }
+
 }
 
 ?>
