@@ -1,17 +1,17 @@
 <?php
-class MemcachedContents extends MTPlugin {
+class DynamicContentCaching extends MTPlugin {
     var $app;
     var $registry = array(
-        'name' => 'MemcachedContents',
-        'id'   => 'MemcachedContents',
-        'key'  => 'memcachedcontents',
+        'name' => 'DynamicContentCaching',
+        'id'   => 'DynamicContentCaching',
+        'key'  => 'dynamiccontentcaching',
         'author_name' => 'Alfasado Inc.',
         'author_link' => 'http://alfasado.net/',
-        'version' => '0.2',
+        'version' => '0.1',
         'config_settings' => array(
-            'MemcachedContentsConditional' => array( 'default' => 1 ),
-            'MemcachedContentsLifeTime' => array( 'default' => 43200 ),
-            'MemcachedContentsExcludes' => array( 'default' => '' ),
+            'DynamicContentCacheConditional' => array( 'default' => 1 ),
+            'DynamicContentCacheLifeTime' => array( 'default' => 43200 ),
+            'DynamicContentCacheExcludes' => array( 'default' => '' ),
         ),
         'callbacks' => array(
             'configure_from_db' => 'configure_from_db',
@@ -26,22 +26,20 @@ class MemcachedContents extends MTPlugin {
                 return TRUE;
             }
             $url = $args[ 'url' ];
-            if ( $excludes = $cfg[ 'memcachedcontentsexcludes' ] ) {
+            if ( $excludes = $cfg[ 'dynamiccontentcacheexcludes' ] ) {
                 $paths = explode( ',', $excludes );
                 foreach ( $paths as $path ) {
                     $path = preg_quote( $path, '/' );
                     if ( preg_match( "/$path/", $url ) ) {
                         return TRUE;
-                        break;
                     }
                 }
             }
             $cachedriver = strtolower( $cfg[ 'dynamiccachedriver' ] );
-            $pos = strpos( $cachedriver, 'memcache' );
-            if ( $pos === FALSE ) return TRUE;
+            if (! $cachedriver ) return TRUE;
             $file = $args[ 'file' ];
             $filemtime = $app->stash( 'filemtime' );
-            if ( $filemtime && $app->config( 'MemcachedContentsConditional' ) ) {
+            if ( $filemtime && $app->config( 'DynamicContentCacheConditional' ) ) {
                 $app->do_conditional( $filemtime );
             }
             $driver = NULL;
@@ -67,20 +65,20 @@ class MemcachedContents extends MTPlugin {
                     exit();
                 }
             }
-            $app->stash( 'memcached_save_content', 1 );
-            $app->stash( 'memcached_content_key', $key );
+            $app->stash( 'dynamic_cached_save_content', 1 );
+            $app->stash( 'dynamic_cached_content_key', $key );
         }
         return TRUE;
     }
 
     function post_return ( $mt, $ctx, $args, $content ) {
-        if ( $this->app->stash( 'memcached_save_content' ) ) {
+        if ( $this->app->stash( 'dynamic_cached_save_content' ) ) {
             $app = $this->app;
-            $key = $app->stash( 'memcached_content_key' );
+            $key = $app->stash( 'dynamic_cached_content_key' );
             $mtime = $app->stash( 'filemtime' );
             $cache = array( $mtime, $content );
             $driver = $app->cache_driver;
-            $lifetime = $app->config( 'MemcachedContentsLifeTime' );
+            $lifetime = $app->config( 'DynamicContentCacheLifeTime' );
             if (! $lifetime ) $lifetime = NULL;
             $driver->set( $key, $cache, $lifetime );
         }
