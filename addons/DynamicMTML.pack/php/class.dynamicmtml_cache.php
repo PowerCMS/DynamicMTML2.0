@@ -24,7 +24,7 @@ class DynamicCache extends DynamicMTML {
                 $key = "${prefix}_${key}";
             }
         }
-        $value = $this->driver->get( $key );
+        $value = $this->driver->get( $key, $ttl );
         $type = gettype( $value );
         if ( $type === 'array' ) {
             return $value;
