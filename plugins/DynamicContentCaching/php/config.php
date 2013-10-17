@@ -54,15 +54,15 @@ class DynamicContentCaching extends MTPlugin {
             $key = "${prefix}_content_" . $url;
             if ( $cache = $driver->get( $key ) ) {
                 $mtime = $cache[ 0 ];
-                if ( (! file_exists( $file ) ) || ( $mtime < $filemtime ) ) {
+                $template = $cache[ 2 ];
+                if ( ( (! file_exists( $file ) ) || ( $mtime < $filemtime ) ) ||
+                    ( $template && (! file_exists( $template ) ) ) ) {
                     $driver->remove( $key );
                 } else {
                     $content = $cache[ 1 ];
                     $extension = $args[ 'extension' ];
                     $contenttype = $app->get_mime_type( $extension );
                     $app->send_http_header( $contenttype, $filemtime, strlen( $content ) );
-                    echo $content;
-                    exit();
                 }
             }
             $app->stash( 'dynamic_cached_save_content', 1 );
@@ -72,11 +72,11 @@ class DynamicContentCaching extends MTPlugin {
     }
 
     function post_return ( $mt, $ctx, $args, $content ) {
-        if ( $this->app->stash( 'dynamic_cached_save_content' ) ) {
-            $app = $this->app;
+        $app = $this->app;
+        if ( $app->stash( 'dynamic_cached_save_content' ) ) {
             $key = $app->stash( 'dynamic_cached_content_key' );
             $mtime = $app->stash( 'filemtime' );
-            $cache = array( $mtime, $content );
+            $cache = array( $mtime, $content, $app->stash( 'template' ) );
             $driver = $app->cache_driver;
             $lifetime = $app->config( 'DynamicContentCacheLifeTime' );
             if (! $lifetime ) $lifetime = NULL;
