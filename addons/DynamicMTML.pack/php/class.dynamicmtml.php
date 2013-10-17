@@ -372,6 +372,10 @@ class DynamicMTML {
         return $this->stash( $key, $val );
     }
 
+    function request ( $key, $val = NULL ) {
+        return $this->stash( $key, $val );
+    }
+
     function stash ( $key, $val = NULL ) {
         if ( isset ( $val ) ) {
             $this->$key = $val;
@@ -514,7 +518,7 @@ class DynamicMTML {
         if (! $powercms_files_dir = $this->config( 'PowerCMSFilesDir' ) ) {
             $powercms_files_dir = dirname( $this->cfg_file ) . DIRECTORY_SEPARATOR . 'powercms_files';
         }
-        $powercms_files_dir = $this->__add_slash( $powercms_files_dir, FALSE );
+        $powercms_files_dir = DynamicMTML::__add_slash( $powercms_files_dir, FALSE );
         $this->stash( 'powercms_files_dir', $powercms_files_dir );
         $this->run_callbacks( 'init_request' );
     }
@@ -617,7 +621,7 @@ class DynamicMTML {
                                             if ( $config ) {
                                                 $config[ 'plugin_path' ] = $plugin_base;
                                                 if (! file_exists( $config_php ) ) {
-                                                    $config = $this->__adjust_callbacks( $config );
+                                                    $config = DynamicMTML::__adjust_callbacks( $config );
                                                 }
                                                 $plugins_config[ $plugin_key ] = $config;
                                             } else {
@@ -653,7 +657,7 @@ class DynamicMTML {
                                                 }
                                             }
                                         }
-                                        $config = $this->__adjust_callbacks( $config );
+                                        $config = DynamicMTML::__adjust_callbacks( $config );
                                         $config[ 'plugin_path' ] = $plugin_base;
                                         $config[ 'plugin' ] = $plugin;
                                         // $plugins_config[ $plugin_key ] = $config;
@@ -682,7 +686,7 @@ class DynamicMTML {
                                         $config[ 'plugin_key' ] = $plugin_key;
                                         $plugins_config[ $plugin_key ] = $config;
                                         if ( isset( $config[ 'tags' ] ) ) {
-                                            $this->__adjust_tags( $config, $blocks, $functions, $modifiers );
+                                            DynamicMTML::__adjust_tags( $config, $blocks, $functions, $modifiers );
                                         }
                                     }
                                     $plugin_callback_dir = $plugin_php_dir . DIRECTORY_SEPARATOR . 'callbacks';
@@ -716,7 +720,7 @@ class DynamicMTML {
         $this->stash( 'init_plugin_dir', 1 );
     }
 
-    function __adjust_tags ( $config, &$blocks, &$functions, &$modifiers ) {
+    public static function __adjust_tags ( $config, &$blocks, &$functions, &$modifiers ) {
         $plugin_key = $config[ 'plugin_key' ];
         if ( isset( $config[ 'tags' ] ) ) {
             $config_tags = $config[ 'tags' ];
@@ -744,7 +748,7 @@ class DynamicMTML {
         }
     }
 
-    function __adjust_callbacks ( $config ) {
+    public static function __adjust_callbacks ( $config ) {
         if ( isset( $config[ 'callbacks' ] ) ) {
             $new_config = array();
             $cb = $config[ 'callbacks' ];
@@ -1101,7 +1105,7 @@ class DynamicMTML {
         }
     }
 
-    function adjust_file ( $file, $indexes, $original, $replace ) {
+    public static function adjust_file ( $file, $indexes, $original, $replace ) {
         if ( DIRECTORY_SEPARATOR != '/' ) {
             $file = str_replace( '\\\\', '\\', $file );
         } else {
@@ -1144,7 +1148,7 @@ class DynamicMTML {
         return $file;
     }
 
-    function check_excludes ( $file, $excludes = 'php', $mt_dir = NULL, $static_path = NULL ) {
+    public static function check_excludes ( $file, $excludes = 'php', $mt_dir = NULL, $static_path = NULL ) {
         $self = $_SERVER[ 'SCRIPT_FILENAME' ];
         $file = strtolower( $file );
         if ( strpos( $file, $self  ) === 0 ) {
@@ -1170,7 +1174,7 @@ class DynamicMTML {
         }
     }
 
-    function __add_slash ( $path, $add = TRUE ) {
+    public static function __add_slash ( $path, $add = TRUE ) {
         $path = rtrim( $path, DIRECTORY_SEPARATOR );
         if ( $add ) {
             $path .= DIRECTORY_SEPARATOR;
@@ -1188,7 +1192,7 @@ class DynamicMTML {
         }
     }
 
-    function get_mime_type ( $extension ) {
+    public static function get_mime_type ( $extension ) {
         $extension = strtolower( $extension );
         $extension = '.html';
         $extension = ltrim( $extension, '.' );
@@ -1292,9 +1296,10 @@ class DynamicMTML {
         return isset( $mime_type[ $extension ] ) ? $mime_type[ $extension ] : 'text/plain';
     }
 
-    function type_text ( $contenttype ) {
+    static function type_text ( $contenttype ) {
         $type = explode( '/', $contenttype );
-        if ( $type[ 0 ] === 'text' || substr( $contenttype, -3 ) === 'xml' ) {
+        if ( $type[ 0 ] === 'text' || substr( $contenttype, -3 ) === 'xml'
+                                   || $type[ 1 ] === 'json' ) {
             return 1;
         }
         return 0;
