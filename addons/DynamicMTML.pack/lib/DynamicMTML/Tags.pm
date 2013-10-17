@@ -1027,7 +1027,7 @@ sub _hdlr_json2mtml {
     my $api_version = $args->{ version } || '';
     if ( (! $api_version ) && ( $tag eq 'dataapiproxy' ) ) {
         $api_version = $app->config( 'DataAPIVersion' );
-        if ( $request =~ m!^/$api_version! ) {
+        if ( $request =~ m!^/$api_version/! ) {
             $api_version = '';
         }
     }

@@ -22,7 +22,7 @@ function smarty_block_mtjson2mtml( $args, $content, &$ctx, &$repeat ) {
         } else {
             if ( $tag === 'mtdataapiproxy' ) {
                 $api_version = $app->config( 'DataAPIVersion' );
-                if ( strpos( $request, '/' . $api_version ) === 0 ) {
+                if ( strpos( $request, '/' . $api_version . '/' ) === 0 ) {
                     $api_version = '';
                 }
             }
