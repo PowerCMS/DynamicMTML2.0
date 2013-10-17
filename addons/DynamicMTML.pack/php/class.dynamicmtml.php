@@ -608,7 +608,7 @@ class DynamicMTML {
                                 $extension = end( $extension );
                                 if ( $extension === 'pack' ) {
                                     $plugin_class = strtr( $plugin_class, '.', '_' );
-                                    $plugin_key = preg_replace( '/\.pack$/', '', $plugin_key );
+                                    $plugin_key = str_replace( '.pack', '', $plugin_key );
                                 }
                                 $plugins_dir_path[ $plugin_key ] = $plugin_base;
                                 $plugin_php_dir = $plugin_base . DIRECTORY_SEPARATOR . 'php';
@@ -1131,7 +1131,7 @@ class DynamicMTML {
             $file = urldecode( $file );
         }
         if ( $original && $replace ) {
-            $file = preg_replace( '/' . preg_quote( $original, '/' ) . '/', $replace, $file );
+            $file = str_replace( $original, $replace, $file );
         }
         if ( rtrim( $file, DIRECTORY_SEPARATOR ) !== $file ) {
             $file = rtrim( $file, DIRECTORY_SEPARATOR );
