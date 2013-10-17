@@ -636,7 +636,6 @@ sub _cb_post_change {
 
 sub _clear_dynamic_cache {
     my ( $key, $obj ) = @_;
-    my $driver = MT->config( 'DynamicCacheDriver' );
     my $prefix = MT->config( 'DynamicCachePrefix' );
     my $update_key = $prefix . '_upldate_key_' . $obj if $obj;
     require DynamicMTML::Cache;

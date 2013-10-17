@@ -1,6 +1,16 @@
 package DynamicMTML::Tags;
 
 use strict;
+use HTTP::Request::Common;
+use LWP::UserAgent;
+use JSON qw/decode_json/;
+no warnings 'redefine';
+use Data::Dumper;
+{
+    package Data::Dumper;
+    sub qquote { return shift; }
+}
+$Data::Dumper::Useperl = 1;
 
 use MT::Util qw( trim remove_html decode_url encode_url );
 use PowerCMS::Util qw( is_cms is_application add_slash get_user to_utf8 utf8_on site_url
@@ -934,10 +944,13 @@ sub _hdlr_buildcache {
     return $cache if $cache;
     my $in_request = $args->{ in_request };
     my ( $driver, $value );
+    my $cache_driver = MT->config( 'DynamicCacheDriver' );
     if (! $in_request ) {
-        eval 'require DynamicMTML::Cache;';
-        if(! $@ ) {
-            $driver = DynamicMTML::Cache->new;
+        if ( $cache_driver ) {
+            eval 'require DynamicMTML::Cache;';
+            if(! $@ ) {
+                $driver = DynamicMTML::Cache->new;
+            }
         }
         if ( $driver ) {
             $value = $driver->get( $key, $ttl );
@@ -975,6 +988,204 @@ sub _hdlr_buildcache {
     }
     MT->request( 'buildcache:' . $key, $value );
     return $value;
+}
+
+sub _hdlr_vars_recurse {
+    my ( $ctx, $args, $cond ) = @_;
+    my $key = $args->{ key };
+    my $record = $ctx->{ __stash }{ vars }->{ $key };
+    my $tokens = $ctx->stash( 'tokens' );
+    my $builder = $ctx->stash( 'builder' );
+    for my $key ( keys ( %$record ) ) {
+        my $value = $record->{ $key };
+        $ctx->{ __stash }{ vars }->{ lc( $key ) } = $value;
+    }
+    my $out = $builder->build( $ctx, $tokens, $cond );
+    if ( !defined( $out ) ) { return $ctx->error( $builder->errstr ) };
+    return $out;
+}
+
+sub _hdlr_data_api_proxy {
+    my ( $ctx, $args, $cond ) = @_;
+    return _hdlr_json2mtml( @_ );
+}
+
+sub _hdlr_json2mtml {
+    my ( $ctx, $args, $cond ) = @_;
+    my $tag = lc( $ctx->stash( 'tag' ) );
+    if ( $tag eq 'dataapiproxy' ) {
+        $args->{ raw_data } = 1;
+    }
+    my $app = MT->instance;
+    my $item;
+    if ( defined $args->{ item } ) {
+        $item = $args->{ item };
+    } else {
+        $item = 'items';
+    }
+    my $request = $args->{ request } || $args->{ endpoint };
+    my $api_version = $args->{ version } || '';
+    if ( (! $api_version ) && ( $tag eq 'dataapiproxy' ) ) {
+        $api_version = $app->config( 'DataAPIVersion' );
+        if ( $request =~ m!^/$api_version! ) {
+            $api_version = '';
+        }
+    }
+    my $instance_url = $args->{ instance };
+    if (! $instance_url ) {
+        $instance_url = $app->config( 'DataAPIURL' );
+        if (! $instance_url ) {
+            my $cgi_path = $app->config( 'CgiPath' );
+            my $script = $app->config( 'DataAPIScript' ) || 'mt-data-api.cgi';
+            $instance_url = $cgi_path . $script;
+        }
+    }
+    my $api = "${instance_url}/${api_version}${request}";
+    my $cache_driver = MT->config( 'DynamicCacheDriver' );
+    my $json;
+    my ( $driver, $cache_key, $ttl );
+    if ( $cache_driver ) {
+        eval 'require DynamicMTML::Cache;';
+        if(! $@ ) {
+            $driver = DynamicMTML::Cache->new;
+        }
+    }
+    my $prefix = MT->config( 'DynamicCachePrefix' ) || 'dynamicmtmlcache';
+    my $method = 'GET';
+    my $class = ref ( $app );
+    my $is_app;
+    if ( $class =~ /^MT::App::/ ) {
+        $is_app = 1;
+        if ( $class ne 'MT::App::CMS' ) {
+            $method = $app->request_method;
+        }
+    }
+    $ttl = $args->{ cache_ttl } || $args->{ ttl };
+    if ( $method eq 'GET' ) {
+        if ( $ttl ) {
+            if ( $ttl eq 'auto' ) {
+                $ttl = $app->config( 'DynamicCacheTTL' );
+            }
+            require Digest::MD5;
+            $cache_key = Digest::MD5::md5_hex( $api );
+            $cache_key = 'data_api_' . $cache_key;
+            if ( $driver ) {
+                $json = $driver->get( $cache_key, $ttl );
+            } else {
+                if ( my $cache = MT->model( 'session' )->load(
+                                { id => $prefix . '_' . $cache_key, kind => 'CO' } ) ) {
+                    if ( $cache->duration > time() ) {
+                        $json = $cache->data();
+                    }
+                }
+            }
+        }
+    }
+    if (! $json ) {
+        my ( $req, $headers );
+        if ( $is_app ) {
+            for my $key ( keys %ENV ) {
+                if ( $key =~ /^HTTP_(.*$)/ ) {
+                    my $value = $ENV{ $key };
+                    $key = lc ( $1 );
+                    my @keys = split( /_/, $key );
+                    my @env;
+                    for my $word( @keys ) {
+                        push ( @env, ucfirst( $word ) );
+                    }
+                    $key = join( '-', @env );
+                    $headers->{ $key } = $value;
+                }
+            }
+        }
+        if ( $method eq 'POST' ) {
+            my @query = $app->param;
+            my %params;
+            for my $param ( @query ) {
+               $params{ $param } = $app->param( $param );
+            }
+            $req = POST( $api, [ %params ] );
+        } else {
+            $req = HTTP::Request->new( $method, $api );
+        }
+        $req->header( $headers ) if $headers;
+        my $ua = LWP::UserAgent->new;
+        my $res = $ua->request( $req );
+        if ( $res->is_error ) {
+            return '';
+        }
+        $json = $res->{ _content };
+        if ( $cache_key && ( $method eq 'GET' ) ) {
+            my $updated_at = $args->{ updated_at };
+            if ( $driver ) {
+                $driver->set( $cache_key, $json, $ttl, $updated_at );
+            } else {
+                my $session = MT->model( 'session' )->get_by_key(
+                    { id => $prefix . '_' . $cache_key, kind => 'CO' } );
+                my $duration = time();
+                if ( $updated_at ) {
+                    my $name = $prefix . '_upldate_key_' . $updated_at;
+                    $session->name( $name );
+                }
+                $session->start( $duration );
+                $session->duration( $duration + $ttl );
+                $session->data( $json );
+                $session->save or die $session->errstr;
+            }
+        }
+    }
+    if ( $args->{ raw_data } ) {
+        return $json;
+    }
+    $json = decode_json( $json );
+    if ( $args->{ debug } ) {
+        my $res = '<pre>' . $api . ':';
+        $res .= Dumper( $json );
+        $res .= '</pre>';
+        return $res;
+    }
+    my ( $code, $message, $totalResults );
+    if ( my $error = $json->{ error } ) {
+        $code = $error->{ code };
+        $message = $error->{ message };
+    } else {
+        $totalResults = $json->{ totalResults };
+        if ( $item ) {
+            $json = $json->{ items };
+        }
+    }
+    my $res = '';
+    my $vars = $ctx->{ __stash }{ vars } ||= +{};
+    my $tokens = $ctx->stash( 'tokens' );
+    my $builder = $ctx->stash( 'builder' );
+    if (! $code && $json ) {
+        $ctx->stash( 'json2mtmlitems', $json );
+        my $i = 0;
+        for my $record ( @$json ) {
+            my $last = !defined @$json[ $i + 1 ];
+            local $vars->{ __first__ }    = !$i;
+            local $vars->{ __counter__ }  = $i + 1;
+            local $vars->{ __odd__ }      = $i % 2 ? 0 : 1;
+            local $vars->{ __even__ }     = $i % 2;
+            local $vars->{ __last__ }     = $last;
+            local $vars->{ totalresults } = $totalResults;
+            for my $key ( keys ( %$record ) ) {
+                my $value = $record->{ $key };
+                $vars->{ lc( $key ) } = $value;
+            }
+            my $out = $builder->build( $ctx, $tokens, $cond );
+            if ( !defined( $out ) ) { return $ctx->error( $builder->errstr ) };
+            $res .= $out;
+            $i++;
+        }
+        return $res;
+    } else {
+        $vars->{ code } = $code;
+        $vars->{ message } = $message;
+        my $out = $builder->build( $ctx, $tokens, $cond );
+        if ( !defined( $out ) ) { return $ctx->error( $builder->errstr ) };
+        return $out;
+    }
 }
 
 sub _hdlr_error {

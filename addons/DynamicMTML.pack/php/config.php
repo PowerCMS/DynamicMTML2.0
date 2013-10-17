@@ -7,7 +7,7 @@ class DynamicMTML_pack extends MTPlugin {
         'key'  => 'dynamicmtml',
         'author_name' => 'Alfasado Inc.',
         'author_link' => 'http://alfasado.net/',
-        'version' => '2.0beta3',
+        'version' => '2.0beta4',
         'description' => 'DynamicMTML is PHP extension for Movable Type.',
         'config_settings' => array( // mt-config.cgi
             'DynamicForceCompile' => array( 'default' => 0 ),
@@ -22,11 +22,14 @@ class DynamicMTML_pack extends MTPlugin {
             'DynamicCacheDriver' => array( 'default' => '' ),
             'DynamicCachePrefix' => array( 'default' => 'dynamicmtmlcache' ),
             'DynamicCacheTTL' => array( 'default' => 7200 ),
-            'DynamicCacheObjects' => array( 'default' => 'template,category' ),
+            'DynamicCacheObjects' => array( 'default' => 'blog,template,category,entry' ),
             'DynamicMemcachedServers' => array( 'default' => '' ),
             'DynamicMemcachedCompressed' => array( 'default' => '' ),
             'DynamicLoadYAML' => array( 'default' => '' ),
             'DynamicContent2gzip' => array( 'default' => 0 ),
+            'DataAPIScript' => array( 'default' => 'mt-data-api.cgi' ),
+            'DataAPIVersion' => array( 'default' => 'v1' ),
+            'DataAPIURL' => array( 'default' => '' ),
         ),
         'settings' => array( // PluginSettings
             'example_setting' => array( 'default' => 1 ),
@@ -57,6 +60,8 @@ class DynamicMTML_pack extends MTPlugin {
                                  'buildrecurs' => 'buildrecurs',
                                  'stripphp' => 'stripphp',
                                  'buildcache' => 'buildcache',
+                                 'varsrecurse' => 'varsrecurse',
+                                 'json2mtml' => 'json2mtml',
                                  ),
             'function' => array( 'authorlanguage' => 'authorlanguage',
                                  'useragent' => 'useragent',
@@ -83,6 +88,7 @@ class DynamicMTML_pack extends MTPlugin {
                                  'referralkeyword' => 'referralkeyword',
                                  'rand' => 'mtrand',
                                  'tablecolumnvalue' => 'tablecolumnvalue',
+                                 'dataapiproxy' => 'dataapiproxy',
                                  'error' => 'error',
                                  ),
             'modifier' => array( 'trimwhitespace' => 'trimwhitespace',
@@ -182,14 +188,22 @@ class DynamicMTML_pack extends MTPlugin {
 
     function init_db ( $mt, &$ctx, $args ) {
         if ( $driver = $this->app->cache_driver ) {
+            $app = $this->app;
             // if ( $cachedriver === 'session' ) return;
-            $prefix = $this->app->cache_prefix;
-            $key = $prefix . '_blog_' . $args[ 'blog_id' ];
-            require_once( 'class.mt_blog.php' );
-            $blog = $driver->get( $key );
-            if ( $blog && is_object( $blog ) ) {
-                $ctx->stash( 'blog', $blog );
-                $this->app->stash( 'cached_' . $key, 1 );
+            if ( $cfg_objects = $app->config( 'DynamicCacheObjects' ) ) {
+                if ( $objects = explode( ',', $cfg_objects ) ) {
+                    $app->stash( 'cfg_cache_objects', $objects );
+                }
+            }
+            if ( in_array( 'blog', $objects ) ) {
+                $prefix = $this->app->cache_prefix;
+                $key = $prefix . '_blog_' . $args[ 'blog_id' ];
+                require_once( 'class.mt_blog.php' );
+                $blog = $driver->get( $key );
+                if ( $blog && is_object( $blog ) ) {
+                    $ctx->stash( 'blog', $blog );
+                    $this->app->stash( 'cached_' . $key, 1 );
+                }
             }
         }
     }
@@ -198,11 +212,7 @@ class DynamicMTML_pack extends MTPlugin {
         if ( $driver = $this->app->cache_driver ) {
             // if ( $cachedriver === 'session' ) return;
             $app = $this->app;
-            if ( $cfg_objects = $app->config( 'DynamicCacheObjects' ) ) {
-                if ( $objects = explode( ',', $cfg_objects ) ) {
-                    $app->stash( 'cfg_cache_objects', $objects );
-                }
-            }
+            $objects = $app->stash( 'cfg_cache_objects' );
             $cachedriver = strtolower( $app->config( 'DynamicCacheDriver' ) );
             if (! $cachedriver !== 'session' ) {
                 $file = md5( $app->stash( 'file' ) );
@@ -480,6 +490,16 @@ class DynamicMTML_pack extends MTPlugin {
         return smarty_block_mtbuildcache( $args, $content, $ctx, $repeat );
     }
 
+    function varsrecurse ( $args, $content, &$ctx, &$repeat ) {
+        require_once( $this->tags_dir() . 'block.mtvarsrecurse.php' );
+        return smarty_block_mtvarsrecurse( $args, $content, $ctx, $repeat );
+    }
+
+    function json2mtml ( $args, $content, &$ctx, &$repeat ) {
+        require_once( $this->tags_dir() . 'block.mtjson2mtml.php' );
+        return smarty_block_mtjson2mtml( $args, $content, $ctx, $repeat );
+    }
+
     // Function Tags
     function useragent ( $args, &$ctx ) {
         require_once( $this->tags_dir() . 'function.mtuseragent.php' );
@@ -499,6 +519,13 @@ class DynamicMTML_pack extends MTPlugin {
     function tablecolumnvalue ( $args, &$ctx ) {
         require_once( $this->tags_dir() . 'function.mttablecolumnvalue.php' );
         return smarty_function_mttablecolumnvalue( $args, $ctx );
+    }
+
+    function dataapiproxy ( $args, &$ctx ) {
+        require_once( $this->tags_dir() . 'block.mtjson2mtml.php' );
+        $repeat = TRUE;
+        $args[ 'raw_data' ] = 1;
+        return smarty_block_mtjson2mtml( $args, NULL, $ctx, $repeat );
     }
 
     function error ( $args, &$ctx ) {

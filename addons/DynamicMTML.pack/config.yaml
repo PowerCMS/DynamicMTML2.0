@@ -4,7 +4,7 @@ key:  dynamicmtml
 author_name: Alfasado Inc.
 author_link: http://alfasado.net/
 pack_link: https://github.com/PowerCMS/DynamicMTML
-version: 2.0beta3
+version: 2.0beta4
 schema_version: 1.02
 l10n_class: DynamicMTML::L10N
 init_request: >
@@ -53,12 +53,16 @@ config_settings:
         default: 7200
         updatable: 1
     DynamicCacheObjects:
-        default: template,category
+        default: blog,template,category,entry
         updatable: 1
     DynamicMemcachedServers:
     DynamicMemcachedCompressed:
     DynamicLoadYAML:
     DynamicContent2gzip:
+    DataAPIVersion:
+        default: v1
+        updatable: 1
+    DataAPIURL:
 object_types:
     blog:
         dynamic_mtml: boolean
@@ -146,6 +150,8 @@ tags:
         StripTags: $dynamicmtml::DynamicMTML::Tags::_hdlr_strip_tags
         StripPHP: $dynamicmtml::DynamicMTML::Tags::_hdlr_strip_php
         BuildCache: $dynamicmtml::DynamicMTML::Tags::_hdlr_buildcache
+        VarsRecurse: $dynamicmtml::DynamicMTML::Tags::_hdlr_vars_recurse
+        JSON2MTML: $dynamicmtml::DynamicMTML::Tags::_hdlr_json2mtml
     function:
         ML: $dynamicmtml::DynamicMTML::Tags::_hdlr_raw_mtml_tag
         MTML: $dynamicmtml::DynamicMTML::Tags::_hdlr_raw_mtml_tag
@@ -178,6 +184,7 @@ tags:
         FileGetContents: $dynamicmtml::DynamicMTML::Tags::_hdlr_file_get_contents
         PluginVersion: $dynamicmtml::DynamicMTML::Tags::_hdlr_plugin_version
         Rand: $dynamicmtml::DynamicMTML::Tags::_hdlr_rand
+        DataAPIProxy: $dynamicmtml::DynamicMTML::Tags::_hdlr_data_api_proxy
         Error: $dynamicmtml::DynamicMTML::Tags::_hdlr_error
     modifier:
         pickup_extension: $dynamicmtml::DynamicMTML::Tags::_filter_pickup_extension
