@@ -1061,6 +1061,7 @@ sub _hdlr_json2mtml {
         }
     }
     $ttl = $args->{ cache_ttl } || $args->{ ttl };
+    my ( $decoded, $error );
     if ( $method eq 'GET' ) {
         if ( $ttl ) {
             if ( $ttl eq 'auto' ) {
@@ -1070,14 +1071,30 @@ sub _hdlr_json2mtml {
             $cache_key = Digest::MD5::md5_hex( $api );
             $cache_key = 'data_api_' . $cache_key;
             if ( $driver ) {
-                $json = $driver->get( $cache_key, $ttl );
+                if ( $json = $driver->get( $cache_key, $ttl ) ) {
+                    $decoded = decode_json( $json );
+                    if ( ref( $decoded ) ne 'HASH' ) {
+                        $error = 1;
+                        $driver->remove( $cache_key );
+                    }
+                }
             } else {
                 if ( my $cache = MT->model( 'session' )->load(
                                 { id => $prefix . '_' . $cache_key, kind => 'CO' } ) ) {
                     if ( $cache->duration > time() ) {
-                        $json = $cache->data();
+                        if ( $json = $cache->data() ) {
+                            $decoded = decode_json( $json );
+                            if ( ref( $decoded ) ne 'HASH' ) {
+                                $error = 1;
+                                $cache->remove or die $cache->errstr;
+                            }
+                        }
                     }
                 }
+            }
+            if ( $error ) {
+                $json = undef;
+                $decoded = undef;
             }
         }
     }
@@ -1111,11 +1128,22 @@ sub _hdlr_json2mtml {
         $req->header( $headers ) if $headers;
         my $ua = LWP::UserAgent->new;
         my $res = $ua->request( $req );
+        my $get_error;
         if ( $res->is_error ) {
-            return '';
+            $get_error = 1;
+            my $message = $res->status_line;
+            $json = '{"error":{"code":500,"message":"' . $message . '"}}';
+            $decoded = undef;
+        } else {
+            $json = $res->{ _content };
+            $decoded = decode_json( $json );
+            if ( ref( $decoded ) ne 'HASH' ) {
+                $get_error = 1;
+                $json = '{"error":{"code":500,"message":"Unknown error"}}';
+                $decoded = undef;
+            }
         }
-        $json = $res->{ _content };
-        if ( $cache_key && ( $method eq 'GET' ) ) {
+        if ( (! $get_error ) && ( $cache_key && ( $method eq 'GET' ) ) ) {
             my $updated_at = $args->{ updated_at };
             if ( $driver ) {
                 $driver->set( $cache_key, $json, $ttl, $updated_at );
@@ -1137,7 +1165,11 @@ sub _hdlr_json2mtml {
     if ( $args->{ raw_data } ) {
         return $json;
     }
-    $json = decode_json( $json );
+    if ( $decoded ) {
+        $json = $decoded;
+    } else {
+        $json = decode_json( $json );
+    }
     if ( $args->{ debug } ) {
         my $res = '<pre>' . $api . ':';
         $res .= Dumper( $json );

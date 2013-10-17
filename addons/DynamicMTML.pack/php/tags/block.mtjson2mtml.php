@@ -56,6 +56,11 @@ function smarty_block_mtjson2mtml( $args, $content, &$ctx, &$repeat ) {
             if ( $cache_driver && $ttl ) {
                 $buf = $cache_driver->get( $cache_key );
                 if ( $buf === FALSE ) unset( $buf );
+                $json = json_decode( $buf, TRUE );
+                if (! is_array( $json ) ) {
+                    unset( $json );
+                    $cache_driver->remove( $cache_key );
+                }
             } elseif ( $ttl ) {
                 require_once( 'class.mt_session.php' );
                 $prefix = $app->config( 'DynamicCachePrefix' ) ?
@@ -74,10 +79,16 @@ function smarty_block_mtjson2mtml( $args, $content, &$ctx, &$repeat ) {
                     } else {
                         $cache->Delete();
                     }
+                    $json = json_decode( $buf, TRUE );
+                    if (! is_array( $json ) ) {
+                        unset( $json );
+                    } else {
+                        $cache->Delete();
+                    }
                 }
             }
         }
-        if (! isset( $buf ) ) {
+        if (! isset( $json ) ) {
             $get_headers = getallheaders();
             $client_headers = array();
             foreach ( $get_headers as $key => $value ) {
@@ -96,9 +107,13 @@ function smarty_block_mtjson2mtml( $args, $content, &$ctx, &$repeat ) {
             }
             curl_setopt ( $curl, CURLOPT_SSL_VERIFYPEER, FALSE );
             $buf = curl_exec( $curl );
-            if ( curl_errno( $curl ) ) {
-                $repeat = FALSE;
-                return '';
+            if ( $error = curl_errno( $curl ) ) {
+                $buf = '{"error":{"code":500,"message":"' . $error . '"}}';
+            }
+            $json = json_decode( $buf, TRUE );
+            if (! is_array( $json ) ) {
+                $buf = '{"error":{"code":500,"message":"Unknown error"}}';
+                $json = json_decode( $buf, TRUE );
             }
             curl_close( $curl );
             if ( $method === 'GET' ) {
@@ -131,7 +146,7 @@ function smarty_block_mtjson2mtml( $args, $content, &$ctx, &$repeat ) {
             exit();
             $repeat = FALSE;
         }
-        $json = json_decode( $buf, TRUE );
+        // $json = json_decode( $buf, TRUE );
         if ( isset( $args[ 'debug' ] ) ) {
             echo '<pre>' . $api . ':';
             var_dump( $json );
