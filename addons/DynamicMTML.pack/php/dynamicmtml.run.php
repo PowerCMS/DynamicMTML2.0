@@ -58,11 +58,11 @@
         $app->mod_rewrite = 1;
     }
     $app->run_callbacks( 'init_app' );
-    $secure = !empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off'
-              /* || isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443 */
+    $secure = !empty( $_SERVER[ 'HTTPS' ] ) && strtolower( $_SERVER[ 'HTTPS' ] ) !== 'off'
+              /* || isset( $_SERVER[ 'SERVER_PORT' ] ) && $_SERVER[ 'SERVER_PORT' ] == 443 */
             ? 's' : '';
     $base   = "http{$secure}://{$_SERVER[ 'SERVER_NAME' ]}";
-    $port   = (int) $_SERVER[ 'SERVER_PORT' ];
+    $port   = ( int ) $_SERVER[ 'SERVER_PORT' ];
     if (! empty( $port ) && $port !== ( $secure === '' ? 80 : 443 ) ) $base .= ":$port";
     $request_uri = NULL;
     if ( isset( $_SERVER[ 'HTTP_X_REWRITE_URL' ] ) ) {
@@ -144,6 +144,27 @@
     } else {
         $request = $request_uri;
         $param = NULL;
+    }
+    if ( strpos( dirname( $request_uri ), '.' ) !== FALSE ) {
+        $request_paths = explode( '/', $request_uri );
+        foreach ( $request_paths as $item ) {
+            if ( strpos( $item, '.' ) !== FALSE ) {
+                $items = explode( $item, $request );
+                $req = $items[ 0 ] . $item;
+                $request_file = $root . $req;
+                if ( file_exists( $request_file ) ) {
+                    $request = $req;
+                    $path_info = $items[ 1 ];
+                    $path_info = ltrim( $path_info, '/' );
+                    $app->stash( 'path_info', $path_info );
+                    $_SERVER[ 'PATH_TRANSLATED' ] = $path_info;
+                    $_SERVER[ 'PATH_INFO' ] = $path_info;
+                    $_SERVER[ 'ORIG_PATH_INFO' ] = $path_info;
+                    // $_SERVER[ 'REQUEST_URI' ] = $req . $app->stash( 'query_string' );
+                    break;
+                }
+            }
+        }
     }
     $url = $base . $request_uri;
     // ========================================
