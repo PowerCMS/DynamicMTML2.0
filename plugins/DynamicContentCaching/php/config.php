@@ -7,7 +7,7 @@ class DynamicContentCaching extends MTPlugin {
         'key'  => 'dynamiccontentcaching',
         'author_name' => 'Alfasado Inc.',
         'author_link' => 'http://alfasado.net/',
-        'version' => '0.1',
+        'version' => '0.2',
         'config_settings' => array(
             'DynamicContentCacheConditional' => array( 'default' => 1 ),
             'DynamicContentCacheLifeTime' => array( 'default' => 43200 ),
@@ -51,7 +51,7 @@ class DynamicContentCaching extends MTPlugin {
             if (! $driver ) return TRUE;
             $prefix = $app->config( 'DynamicCachePrefix' );
             $url = md5( $url );
-            $key = "${prefix}_content_" . $url;
+            $key = $prefix . '_content_' . $url;
             if ( $cache = $driver->get( $key ) ) {
                 $mtime = $cache[ 0 ];
                 $template = $cache[ 2 ];
