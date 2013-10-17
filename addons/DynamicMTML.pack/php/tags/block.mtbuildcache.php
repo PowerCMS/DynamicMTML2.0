@@ -2,7 +2,9 @@
 function smarty_block_mtbuildcache( $args, $content, $ctx, $repeat ) {
     $app = $ctx->stash( 'bootstrapper' );
     $ttl = $args[ 'ttl' ];
+    if (! $ttl ) $ttl = $app->config( 'DynamicCacheTTL' );
     $key = $args[ 'key' ];
+    $key = 'bc_' . $key;
     $in_request = $args[ 'in_request' ];
     $updated_at = $args[ 'updated_at' ];
     $cache = $ctx->stash( 'buildcache:' . $key );
@@ -23,14 +25,16 @@ function smarty_block_mtbuildcache( $args, $content, $ctx, $repeat ) {
                 $session = new Session;
                 $ttl = $app->escape( $ttl );
                 $key = $app->escape( $key );
-                $where = "session_id = '${key}'";// AND session_duration > '{$duration}'";
+                $cache_key = 'dynamicmtmlcache_' . $key;
+                $where = "session_id = '${cache_key}'";// AND session_duration > '{$duration}'";
                 $extra = array( 'limit' => 1 );
                 $cache = $session->Find( $where, FALSE, FALSE, $extra );
                 $duration = time();
                 if ( isset( $cache ) ) {
-                    if ( $cache->duration < $duration ) {
-                        $ctx->stash( 'buildcache:' . $key, $cache[ 0 ]->data );
-                        return $cache[ 0 ]->data;
+                    $cache = $cache[ 0 ];
+                    if ( $cache->duration > $duration ) {
+                        $ctx->stash( 'buildcache:' . $key, $cache->data );
+                        return $cache->data;
                     } else {
                         $cache->Remove();
                     }
@@ -45,10 +49,13 @@ function smarty_block_mtbuildcache( $args, $content, $ctx, $repeat ) {
             } else {
                 require_once( 'class.mt_session.php' );
                 $session = new Session;
-                $ttl = $app->escape( $ttl );
-                $key = $app->escape( $key );
                 $duration = time();
-                $session->session_id = $key;
+                $cache_key = 'dynamicmtmlcache_' . $key;
+                $session->session_id = $cache_key;
+                if ( $updated_at ) {
+                    $name = 'dynamicmtmlcache_upldate_key_' . $updated_at;
+                    $session->name = $name;
+                }
                 $session->session_kind = 'CO';
                 $session->session_start = $duration;
                 $session->session_duration = $duration + $ttl;

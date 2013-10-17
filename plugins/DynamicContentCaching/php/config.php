@@ -63,6 +63,8 @@ class DynamicContentCaching extends MTPlugin {
                     $extension = $args[ 'extension' ];
                     $contenttype = $app->get_mime_type( $extension );
                     $app->send_http_header( $contenttype, $filemtime, strlen( $content ) );
+                    echo $content;
+                    exit();
                 }
             }
             $app->stash( 'dynamic_cached_save_content', 1 );

@@ -927,28 +927,51 @@ sub _hdlr_strip_php {
 
 sub _hdlr_buildcache {
     my ( $ctx, $args, $cond ) = @_;
-    my $ttl = $args->{ ttl };
-    my $key = $args->{ key };
+    my $ttl = $args->{ ttl } || MT->config( 'DynamicCacheTTL' );
+    my $key = $args->{ key } || '';
+    $key = 'bc_' . $key;
     my $cache = MT->request( 'buildcache:' . $key );
     return $cache if $cache;
     my $in_request = $args->{ in_request };
-    my $driver;
+    my ( $driver, $value );
     if (! $in_request ) {
-        require DynamicMTML::Cache;
-        my $driver = DynamicMTML::Cache->new;
-        my $value = $driver->get( $key, $ttl );
-        if ( $value ) {
-            if (! MT->config( 'DynamicCacheDriver' ) ) {
-                $value = utf8_on( $value );
+        eval 'require DynamicMTML::Cache;';
+        if(! $@ ) {
+            $driver = DynamicMTML::Cache->new;
+        }
+        if ( $driver ) {
+            $value = $driver->get( $key, $ttl );
+        } else {
+            my $cache_key = 'dynamicmtmlcache_' . $key;
+            if ( my $cache = MT->model( 'session' )->load( { id => $cache_key, kind => 'CO' } ) ) {
+                if ( $cache->duration > time() ) {
+                    $value = $cache->data();
+                }
             }
+        }
+        if ( defined( $value ) ) {
             MT->request( 'buildcache:' . $key, $value );
             return $value;
         }
     }
-    my $value = $ctx->stash( 'builder' )->build( $ctx, $ctx->stash( 'tokens' ), $cond );
+    $value = $ctx->stash( 'builder' )->build( $ctx, $ctx->stash( 'tokens' ), $cond );
     my $updated_at = $args->{ updated_at };
     if (! $in_request ) {
-        $driver->set( $key, $value, $ttl, $updated_at );
+        if ( $driver ) {
+            $driver->set( $key, $value, $ttl, $updated_at );
+        } else {
+            my $cache_key = 'dynamicmtmlcache_' . $key;
+            my $session = MT->model( 'session' )->get_by_key( { id => $cache_key, kind => 'CO' } );
+            my $duration = time();
+            if ( $updated_at ) {
+                my $name = 'dynamicmtmlcache_upldate_key_' . $updated_at;
+                $session->name( $name );
+            }
+            $session->start( $duration );
+            $session->duration( $duration + $ttl );
+            $session->data( $value );
+            $session->save or die $session->errstr;
+        }
     }
     MT->request( 'buildcache:' . $key, $value );
     return $value;
