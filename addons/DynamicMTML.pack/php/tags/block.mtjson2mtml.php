@@ -17,8 +17,8 @@ function smarty_block_mtjson2mtml( $args, $content, &$ctx, &$repeat ) {
         } elseif ( isset( $args[ 'endpoint' ] ) ) {
             $request = $args[ 'endpoint' ];
         }
-        if (! $request ) {
-            $request = '/' . $app->stash( 'path_info' );
+        if (! $request && $app->path_info ) {
+            $request = $app->path_info;
         }
         if ( isset( $args[ 'version' ] ) ) {
             $api_version = $args[ 'version' ];

@@ -106,6 +106,7 @@
     $ctime        = empty( $_SERVER[ 'REQUEST_TIME' ] )
                   ? time() : $_SERVER[ 'REQUEST_TIME' ];
     $request      = NULL;
+    $path_info    = NULL;
     $text         = NULL;
     $param        = NULL;
     $orig_mtime   = NULL;
@@ -155,12 +156,8 @@
                 if ( file_exists( $request_file ) ) {
                     $request = $req;
                     $path_info = $items[ 1 ];
-                    $path_info = ltrim( $path_info, '/' );
+                    $app->path_info = $path_info;
                     $app->stash( 'path_info', $path_info );
-                    $_SERVER[ 'PATH_TRANSLATED' ] = $path_info;
-                    $_SERVER[ 'PATH_INFO' ] = $path_info;
-                    $_SERVER[ 'ORIG_PATH_INFO' ] = $path_info;
-                    // $_SERVER[ 'REQUEST_URI' ] = $req . $app->stash( 'query_string' );
                     break;
                 }
             }
@@ -207,6 +204,7 @@
                    'path' => $path,
                    'script' => $script,
                    'request' => $request,
+                   'path_info' => $path_info,
                    'param' => $param,
                    'is_secure' => $is_secure,
                    'url' => $url,
@@ -284,7 +282,7 @@
     // ========================================
     $cache = $app->stash( 'cache' );
     if (! $cache ) {
-        $cache = $app->cache_filename( $blog_id, $file, $param );
+        $cache = $app->cache_filename( $blog_id, $file . $path_info, $param );
         $app->stash( 'cache', $cache );
     }
     $args[ 'cache' ] = $cache;

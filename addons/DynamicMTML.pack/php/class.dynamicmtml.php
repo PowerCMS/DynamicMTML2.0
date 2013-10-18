@@ -28,6 +28,7 @@ class DynamicMTML {
     public $conditional;
     public $force_compile;
     public $param;
+    public $path_info;
     public $query_string;
     public $contenttype;
     public $extension;
