@@ -148,15 +148,16 @@
     }
     if ( strpos( dirname( $request_uri ), '.' ) !== FALSE ) {
         $request_paths = explode( '/', $request_uri );
+        $curr_paths = $request_paths;
+        $paths = '';
         foreach ( $request_paths as $item ) {
+            if ( $item ) $paths .= '/' . $item;
+            $curr_paths = array_slice( $curr_paths, 1 );
             if ( strpos( $item, '.' ) !== FALSE ) {
-                $items = explode( $item, $request );
-                $req = $items[ 0 ] . $item;
-                $request_file = $root . $req;
+                $request_file = $root . $paths;
                 if ( is_file( $request_file ) ) {
-                    $request = $req;
-                    $items = array_slice( $items, 1, count( $items ) );
-                    $path_info = join( '', $items );
+                    $path_info = '/' . join( '/', $curr_paths );
+                    $request = $paths;
                     $app->path_info = $path_info;
                     $app->stash( 'path_info', $path_info );
                     break;
