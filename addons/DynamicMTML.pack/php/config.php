@@ -7,7 +7,7 @@ class DynamicMTML_pack extends MTPlugin {
         'key'  => 'dynamicmtml',
         'author_name' => 'Alfasado Inc.',
         'author_link' => 'http://alfasado.net/',
-        'version' => '2.0beta4',
+        'version' => '2.0beta5',
         'description' => 'DynamicMTML is PHP extension for Movable Type.',
         'config_settings' => array( // mt-config.cgi
             'DynamicForceCompile' => array( 'default' => 0 ),
@@ -30,6 +30,8 @@ class DynamicMTML_pack extends MTPlugin {
             'DataAPIScript' => array( 'default' => 'mt-data-api.cgi' ),
             'DataAPIVersion' => array( 'default' => 'v1' ),
             'DataAPIURL' => array( 'default' => '' ),
+            'DeleteFileAtPreview' => array( 'default' => 1 ),
+            'PreviewServers' => array( 'default' => '' ),
         ),
         'settings' => array( // PluginSettings
             'example_setting' => array( 'default' => 1 ),

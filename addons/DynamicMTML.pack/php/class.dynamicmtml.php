@@ -466,7 +466,7 @@ class DynamicMTML {
         if ( isset( $this->config ) ) return $config;
         $this->cfg_file = $file;
         $cfg = array();
-        $type_array = array( 'pluginpath', 'alttemplate', 'outboundtrackbackdomains',
+        $type_array = array( 'pluginpath', 'alttemplate', 'outboundtrackbackdomains', 'previewservers',
                              'memcachedservers', 'userpasswordvalidation', 'dynamicmemcachedservers' );
         $type_hash = array( 'commenterregistration' );
         if ( file_exists( $file ) ) {

@@ -15,7 +15,6 @@
     if (! $app->config( 'Database' ) || (! isset( $blog_id ) ) ) {
         $no_database = TRUE;
         $app->stash( 'no_database', 1 );
-        // require_once( $mt_dir . DIRECTORY_SEPARATOR . 'php' . DIRECTORY_SEPARATOR . 'dynamic_mt.php' );
         require_once( $plugin_path . 'mt.php' );
         $mt = new MT();
     }
@@ -115,6 +114,9 @@
     $build_type   = NULL;
     $data         = NULL;
     $dynamicmtml  = FALSE;
+    $preview      = FALSE;
+    $get_preview  = FALSE;
+    $file_exists  = FALSE;
     $is_secure    = NULL; if ( $secure ) { $is_secure = 1; }
     if (! isset( $extension ) ) $extension = 'html';
     if (! isset( $use_cache ) ) $use_cache = 0;
@@ -130,18 +132,8 @@
     // Check Request and Set Parameter
     // ========================================
     if ( strpos( $request_uri, '?' ) ) {
-    // if ( preg_match( '/\?/', $request_uri ) ) {
         list( $request, $param ) = explode( '?', $request_uri );
         $app->stash( 'query_string', $param );
-        $pos = strpos( $request, '/mt-preview-' );
-        if ( $pos !== FALSE ) {
-        // if ( preg_match( '/\/mt\-preview\-/', $request ) ) {
-            if ( preg_match( '/^[0-9]{1,}$/', $param ) ) {
-                $use_cache = 0;
-                $clear_cache = 1;
-                $app->stash( 'preview', 1 );
-            }
-        }
     } else {
         $request = $request_uri;
         $param = NULL;
@@ -182,11 +174,83 @@
         }
     }
     $contenttype = $app->get_mime_type( $extension );
+    if ( file_exists( $file ) ) {
+        $file_exists = TRUE;
+    }
+    if ( $param && ctype_digit( $param ) ) {
+        $pos = strpos( basename( $request ), 'mt-preview-' );
+        if ( $pos === 0 ) {
+            if ( strpos( basename( $request ), 'mt-preview-' ) === 0 ) {
+                $use_cache = 0;
+                $clear_cache = 1;
+                $app->stash( 'preview', 1 );
+                $preview = 1;
+                if (! $file_exists ) {
+                    $get_preview = 1;
+                }
+            }
+        }
+    }
+    if (! $file_exists ) {
+        if (! $preview ) {
+            if ( $referer = $_SERVER[ 'HTTP_REFERER' ] ) {
+                // TODO::https
+                if ( strpos( $referer, $base ) === 0 ) {
+                    if ( strpos( $referer, '?' ) !== FALSE ) {
+                        list ( $ref_req, $ref_param ) = explode( '?', $referer );
+                        if ( $ref_param && ctype_digit( $ref_param ) ) {
+                            $pos = strpos( basename( $ref_req ), 'mt-preview-' );
+                            if ( $pos === 0 ) {
+                                $get_preview = 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if ( $get_preview ) {
+        $preview_servers = $app->config( 'PreviewServers' );
+        if ( is_array( $preview_servers ) ) {
+            $agent = 1;
+            if ( isset( $_SERVER[ 'HTTP_X_FORWARDED_BY' ] ) ) {
+                if ( $_SERVER[ 'HTTP_X_FORWARDED_BY' ] === 'DynamicMTML' ) {
+                    $agent = 0;
+                }
+            }
+            if ( $agent ) {
+                foreach ( $preview_servers as $server ) {
+                    $server = rtrim( $server, '/' );
+                    if ( $base === $server ) continue;
+                    $preview = preg_replace( "!^$base!", $server, $url );
+                    $get_headers = getallheaders();
+                    $client_headers = array();
+                    foreach ( $get_headers as $key => $value ) {
+                        $header = $key . ': ' . $value;
+                        array_push( $client_headers, $header );
+                    }
+                    array_push( $client_headers, 'X-Forwarded-By: DynamicMTML' );
+                    $curl = curl_init();
+                    curl_setopt( $curl, CURLOPT_HTTPHEADER, $client_headers );
+                    curl_setopt( $curl, CURLOPT_URL, $preview );
+                    curl_setopt( $curl, CURLOPT_RETURNTRANSFER, 1 );
+                    curl_setopt( $curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1 );
+                    curl_setopt ( $curl, CURLOPT_SSL_VERIFYPEER, FALSE );
+                    $preview_content = curl_exec( $curl );
+                    if ( $preview_content ) {
+                        $app->send_http_header( $contenttype, time(), strlen( $preview_content ) );
+                        echo $preview_content;
+                        exit();
+                    }
+                }
+            }
+        }
+    }
     $type_text = $app->type_text( $contenttype );
     $path = preg_replace( '!(/[^/]*$)!', '', $request );
     $path .= '/';
     $script = preg_replace( '!(^.*?/)([^/]*$)!', '$2', $request );
-    if ( file_exists( $file ) ) {
+    if ( $file_exists ) {
         $orig_mtime = filemtime( $file );
         $app->stash( 'filemtime', $orig_mtime );
     }
@@ -216,7 +280,6 @@
     $app->run_callbacks( 'pre_run', $mt, $ctx, $args );
     require_once $mt_dir . DIRECTORY_SEPARATOR . 'php' . DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . 'class.exception.php';
     if (! $mt ) {
-        //require_once( $mt_dir . DIRECTORY_SEPARATOR . 'php' . DIRECTORY_SEPARATOR . 'mt.php' );
         require_once( 'mt.php' );
         try {
             $mt = MT::get_instance( $blog_id, $mt_config );
@@ -256,13 +319,10 @@
         } else {
             $ctx->stash( 'no_database', 1 );
             $app->set_context( $mt, $ctx );
-            // $mt->init_plugins();
-            // require_once( 'init.dynamicmtml.php' );
         }
         $mt->init_plugins();
-        // TODO::Create Blog object.
         $ctx->stash( 'callback_dir', $app->stash( 'callback_dir' ) );
-        $ctx->stash( 'preview', $app->stash( 'preview' ) );
+        $ctx->stash( 'preview', $preview );
         $ctx->stash( 'content_type', $contenttype );
         $base_original = $root;
         $request_original = $request;
@@ -330,7 +390,7 @@
     }
     if ( file_exists( $file ) && $dynamicmtml ) {
         if ( $app->config( 'Database' ) ) {
-            if ( $app->config( 'PermCheckAtPreview' ) ) {
+            if ( $app->config( 'PermCheckAtPreview' ) && $preview ) {
                 if (! isset( $mt ) ) {
                     $app->access_forbidden();
                 } else {
@@ -371,9 +431,7 @@
                 }
             }
             $app->stash( 'text', $text );
-            // require_once( $plugin_path . 'resource.var.php' );
             if ( isset( $mt ) && ( preg_match( "/$regex/i", $text ) ) ) {
-                // require_once( 'MTUtil.php' );
                 $last_ts = NULL;
                 $file_ts = NULL;
                 $file_ts = filemtime( $file );
@@ -413,7 +471,6 @@
                     $ctx->force_compile = true;
                 }
                 if ( isset( $data ) ) {
-                    // require_once( $plugin_path . 'dynamicmtml.set_context.php' );
                     $fi_path = $data->fileinfo_url;
                     $fid = $data->id;
                     $at = $data->archive_type;
@@ -647,9 +704,11 @@
         touch( $cache, $ctime );
         $app->stash( 'cache_saved', 1 );
     }
-    if ( $app->stash( 'preview' ) ) {
+    if ( $preview ) {
         if ( $file && ( file_exists( $file ) ) ) {
-            unlink( $file );
+            if ( $app->config( 'DeleteFileAtPreview' ) ) {
+                unlink( $file );
+            }
         }
     }
     if ( isset( $mt ) ) {
