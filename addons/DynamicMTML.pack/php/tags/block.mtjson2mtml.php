@@ -30,6 +30,9 @@ function smarty_block_mtjson2mtml( $args, $content, &$ctx, &$repeat ) {
                 }
             }
         }
+        if (! $api_version ) {
+            $request = ltrim( $request, '/' );
+        }
         if ( isset( $args[ 'instance' ] ) ) {
             $instance_url = $args[ 'instance' ];
         } else {
