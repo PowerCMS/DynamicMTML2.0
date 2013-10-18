@@ -155,7 +155,8 @@
                 $request_file = $root . $req;
                 if ( file_exists( $request_file ) ) {
                     $request = $req;
-                    $path_info = $items[ 1 ];
+                    $items = array_slice( $items, 1, count( $items ) );
+                    $path_info = join( '', $items );
                     $app->path_info = $path_info;
                     $app->stash( 'path_info', $path_info );
                     break;
