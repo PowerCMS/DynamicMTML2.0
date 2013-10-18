@@ -180,14 +180,12 @@
     if ( $param && ctype_digit( $param ) ) {
         $pos = strpos( basename( $request ), 'mt-preview-' );
         if ( $pos === 0 ) {
-            if ( strpos( basename( $request ), 'mt-preview-' ) === 0 ) {
-                $use_cache = 0;
-                $clear_cache = 1;
-                $app->stash( 'preview', 1 );
-                $preview = 1;
-                if (! $file_exists ) {
-                    $get_preview = 1;
-                }
+            $use_cache = 0;
+            $clear_cache = 1;
+            $app->stash( 'preview', 1 );
+            $preview = 1;
+            if (! $file_exists ) {
+                $get_preview = 1;
             }
         }
     }
