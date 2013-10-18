@@ -153,7 +153,7 @@
                 $items = explode( $item, $request );
                 $req = $items[ 0 ] . $item;
                 $request_file = $root . $req;
-                if ( file_exists( $request_file ) ) {
+                if ( is_file( $request_file ) ) {
                     $request = $req;
                     $items = array_slice( $items, 1, count( $items ) );
                     $path_info = join( '', $items );
