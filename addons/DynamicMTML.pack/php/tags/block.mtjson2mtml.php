@@ -95,12 +95,7 @@ function smarty_block_mtjson2mtml( $args, $content, &$ctx, &$repeat ) {
             }
         }
         if (! isset( $json ) ) {
-            $get_headers = getallheaders();
-            $client_headers = array();
-            foreach ( $get_headers as $key => $value ) {
-                $header = $key . ': ' . $value;
-                array_push( $client_headers, $header );
-            }
+            $client_headers = $app->client_headers();
             $curl = curl_init();
             curl_setopt( $curl, CURLOPT_HTTPHEADER, $client_headers );
             curl_setopt( $curl, CURLOPT_URL, $api );

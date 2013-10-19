@@ -12,12 +12,7 @@
                 $server = rtrim( $server, '/' );
                 if ( $base === $server ) continue;
                 $preview = preg_replace( "!^$base!", $server, $url );
-                $get_headers = getallheaders();
-                $client_headers = array();
-                foreach ( $get_headers as $key => $value ) {
-                    $header = $key . ': ' . $value;
-                    array_push( $client_headers, $header );
-                }
+                $client_headers = $app->client_headers();
                 array_push( $client_headers, 'X-Forwarded-By: DynamicMTML' );
                 $curl = curl_init();
                 curl_setopt( $curl, CURLOPT_HTTPHEADER, $client_headers );

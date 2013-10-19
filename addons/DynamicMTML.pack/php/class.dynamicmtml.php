@@ -4440,6 +4440,16 @@ class DynamicMTML {
         return $ts;
     }
 
+    function client_headers() {
+        $get_headers = getallheaders();
+        $client_headers = array();
+        foreach ( $get_headers as $key => $value ) {
+            $header = $key . ': ' . $value;
+            array_push( $client_headers, $header );
+        }
+        return $client_headers;
+    }
+
     function strip_php( $source ) {
         $tokens = token_get_all( $source );
         $res = '';
