@@ -16,7 +16,20 @@ function get_param ( $param ) {
 function get_agent ( $wants = 'Agent', $like = NULL, $exclude = NULL ) {
     // Agent Smartphone Keitai Mobile // TODO::Mobile Safari Apple(Mac)
     global $app;
-    $agent = $_SERVER[ 'HTTP_USER_AGENT' ];
+    if ( ( $app->param( 'smartphone_preview' ) )
+        || ( $app->stash( 'smartphone_preview' ) ) ) {
+        $referer = $_SERVER[ 'HTTP_REFERER' ];
+        if ( strpos( $referer, '?' ) === FALSE ) {
+            $referer = explode( '?', $referer );
+            $referer = $referer[ 0 ];
+        }
+        if ( basename( $referer ) === $app->config( 'AdminScript' ) ) {
+            if ( $agent = $app->config( 'SmartphonePreviewAgent' ) ) {
+                $_SERVER[ 'HTTP_USER_AGENT' ] = $agent;
+            }
+        }
+    }
+    if (! $agent ) $agent = $_SERVER[ 'HTTP_USER_AGENT' ];
     if (! $wants ) $wants = 'Agent';
     if ( $like ) {
         $like = preg_quote( $like, '/' );

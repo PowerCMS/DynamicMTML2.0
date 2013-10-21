@@ -1706,6 +1706,9 @@ sub format_LF {
 
 sub get_agent {
     my $app = shift || MT->instance();
+    if(! is_application( $app ) ) {
+        return '';
+    }
     # Agent Smartphone Keitai Mobile // TODO::Mobile Safari Apple(Mac)
     my $wants = shift;
     my $like  = shift;
@@ -1714,6 +1717,18 @@ sub get_agent {
     $wants = lc( $wants );
     $exclude = lc( $exclude ) if $exclude;
     my $agent = $app->get_header( 'User-Agent' );
+    if ( $app->param( 'smartphone_preview' ) ) {
+        if ( $app->config( 'SmartphonePreviewAgent' ) ) {
+            if ( my $referer = $app->get_header( 'REFERER' ) ) {
+                my @refpaths = split( /\?/, $referer );
+                $referer = $refpaths[ 0 ];
+                my $adminscript = $app->config( 'AdminScript' );
+                if ( $referer =~ /\/$adminscript$/ ) {
+                    $agent = $app->config( 'SmartphonePreviewAgent' );
+                }
+            }
+        }
+    }
     if ( $like ) {
         if ( $agent =~ /$like/i ) {
             return 1;

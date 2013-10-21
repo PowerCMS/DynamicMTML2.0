@@ -176,28 +176,32 @@
     if ( file_exists( $file ) ) {
         $file_exists = TRUE;
     }
-    if ( $param && ctype_digit( $param ) ) {
+    if ( $param ) {
         $pos = strpos( basename( $request ), 'mt-preview-' );
         if ( $pos === 0 ) {
-            $use_cache = 0;
-            $clear_cache = 1;
-            $app->stash( 'preview', 1 );
-            $preview = 1;
-            if (! $file_exists ) {
-                $get_preview = 1;
+            $check_param = str_replace( '&smartphone_preview=1', '', $param );
+            if ( ctype_digit( $check_param ) ) {
+                $use_cache = 0;
+                $clear_cache = 1;
+                $app->stash( 'preview', 1 );
+                $preview = 1;
+                if (! $file_exists ) {
+                    $get_preview = 1;
+                }
             }
         }
     }
-    if (! $file_exists ) {
-        if (! $preview ) {
-            if ( $referer = $_SERVER[ 'HTTP_REFERER' ] ) {
-                // TODO::https
-                if ( strpos( $referer, $base ) === 0 ) {
-                    if ( strpos( $referer, '?' ) !== FALSE ) {
-                        list ( $ref_req, $ref_param ) = explode( '?', $referer );
-                        if ( $ref_param && ctype_digit( $ref_param ) ) {
-                            $pos = strpos( basename( $ref_req ), 'mt-preview-' );
-                            if ( $pos === 0 ) {
+    if ( (! $file_exists ) && (! $preview ) ) {
+        if ( $referer = $_SERVER[ 'HTTP_REFERER' ] ) {
+            // TODO::https
+            if ( strpos( $referer, $base ) === 0 ) {
+                if ( strpos( $referer, '?' ) !== FALSE ) {
+                    list ( $ref_req, $ref_param ) = explode( '?', $referer );
+                    if ( $ref_param ) {
+                        $pos = strpos( basename( $ref_req ), 'mt-preview-' );
+                        if ( $pos === 0 ) {
+                            $ref_param = str_replace( '&smartphone_preview=1', '', $ref_param );
+                            if ( ctype_digit( $ref_param ) ) {
                                 $get_preview = 1;
                             }
                         }

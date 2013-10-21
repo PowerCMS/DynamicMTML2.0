@@ -43,7 +43,7 @@ config_settings:
         default: 0
         updatable: 1
     AllowableTags:
-        default: '<a><br><b><i><p><strong><em><img><ul><ol><li><blockquote><pre>'
+        default: <a><br><b><i><p><strong><em><img><ul><ol><li><blockquote><pre>
         updatable: 1
     DynamicCacheDriver:
     DynamicCachePrefix:
@@ -67,6 +67,8 @@ config_settings:
         default: 1
         updatable: 1
     PreviewServers:
+    SmartphonePreviewAgent:
+        default: Mozilla/5.0 (iPhone; CPU iPhone OS 5_1 like Mac OS X)
 object_types:
     blog:
         dynamic_mtml: boolean

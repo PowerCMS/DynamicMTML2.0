@@ -48,7 +48,7 @@ sub _hdlr_raw_mtml {
     my $uncompiled = $ctx->stash( 'uncompiled' ) || '';
     if ( is_cms( $app ) ) {
         my $mode = $app->mode;
-        if ( $mode !~ /preview/ ) {
+        if ( ( $mode !~ /preview/ ) || ( $args->{ preview_dynamic } ) ) {
             return $uncompiled;
         } else {
             my $build = _hdlr_pass_tokens( $ctx, $args, $cond );

@@ -32,6 +32,8 @@ class DynamicMTML_pack extends MTPlugin {
             'DataAPIURL' => array( 'default' => '' ),
             'DeleteFileAtPreview' => array( 'default' => 1 ),
             'PreviewServers' => array( 'default' => '' ),
+            'SmartphonePreviewAgent'
+                => array( 'default' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 5_1 like Mac OS X)' ),
         ),
         'settings' => array( // PluginSettings
             'example_setting' => array( 'default' => 1 ),
