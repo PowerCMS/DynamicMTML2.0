@@ -39,6 +39,9 @@ config_settings:
     DynamicPHPFirst:
         default: 0
         updatable: 1
+    DynamicAllowPHPinTemplate:
+        default: 1
+        updatable: 1
     PermCheckAtPreview:
         default: 0
         updatable: 1
