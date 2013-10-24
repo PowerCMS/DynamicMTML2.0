@@ -192,7 +192,8 @@
         }
     }
     if ( (! $file_exists ) && (! $preview ) ) {
-        if ( $referer = $_SERVER[ 'HTTP_REFERER' ] ) {
+        if ( isset( $_SERVER[ 'HTTP_REFERER' ] ) ) {
+            $referer = $_SERVER[ 'HTTP_REFERER' ];
             // TODO::https
             if ( strpos( $referer, $base ) === 0 ) {
                 if ( strpos( $referer, '?' ) !== FALSE ) {
