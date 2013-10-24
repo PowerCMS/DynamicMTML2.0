@@ -114,6 +114,11 @@ callbacks:
           priority: 10
         - handler: $dynamicmtml::DynamicMTML::Plugin::_disable_dynamicmtml
           priority: 1
+    cms_post_save.website:
+        - handler: $dynamicmtml::DynamicMTML::Plugin::_post_save_blog
+          priority: 10
+        - handler: $dynamicmtml::DynamicMTML::Plugin::_disable_dynamicmtml
+          priority: 1
     MT::Entry::post_save: $dynamicmtml::DynamicMTML::Plugin::_cb_post_change
     MT::Entry::post_remove: $dynamicmtml::DynamicMTML::Plugin::_cb_post_change
     MT::Page::post_save: $dynamicmtml::DynamicMTML::Plugin::_cb_post_change
