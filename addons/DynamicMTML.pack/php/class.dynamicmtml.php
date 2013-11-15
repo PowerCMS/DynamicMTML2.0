@@ -1001,7 +1001,7 @@ class DynamicMTML {
         return $ctx;
     }
 
-    function run_callbacks ( $callback, $mt = NULL, &$ctx = NULL, &$args = NULL, &$content = NULL ) {
+    function run_callbacks ( $callback, $mt = NULL, $ctx = NULL, $args = NULL, $content = NULL ) {
         $class = get_class( $this );
         $callback_dir = array();
         $plugins_callbacks = array();
