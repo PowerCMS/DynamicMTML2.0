@@ -48,7 +48,7 @@ class DynamicCacheSession extends DynamicCache {
         if ( $this->get( $key, NULL, TRUE ) ) {
             return $session->Update();
         }
-        return $session->Save();
+        return $session->save();
     }
 
     function remove ( $key ) {
