@@ -232,7 +232,7 @@ sub _post_save_author {
 sub _post_save_blog {
     my ( $cb, $app, $obj, $original ) = @_;
     my $blog = $app->blog;
-    if ( $blog->id ne $obj->id ) { # is new
+    if ( ! $blog ||  $blog->id ne $obj->id ) { # is new
         $blog = $obj;
     }
     my $component = MT->component( 'DynamicMTML' );
