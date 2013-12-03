@@ -7,7 +7,7 @@ class DynamicMTML_pack extends MTPlugin {
         'key'  => 'dynamicmtml',
         'author_name' => 'Alfasado Inc.',
         'author_link' => 'http://alfasado.net/',
-        'version' => '2.0beta5',
+        'version' => '2.0',
         'description' => 'DynamicMTML is PHP extension for Movable Type.',
         'config_settings' => array( // mt-config.cgi
             'DynamicForceCompile' => array( 'default' => 0 ),
