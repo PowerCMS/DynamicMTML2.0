@@ -1195,7 +1195,6 @@ class DynamicMTML {
 
     public static function get_mime_type ( $extension ) {
         $extension = strtolower( $extension );
-        $extension = '.html';
         $extension = ltrim( $extension, '.' );
         if ( isset( $_SERVER[ 'HTTP_USER_AGENT' ] ) ) {
             if ( strpos( $_SERVER[ 'HTTP_USER_AGENT' ], 'DoCoMo/2.0' ) === 0 ) {
