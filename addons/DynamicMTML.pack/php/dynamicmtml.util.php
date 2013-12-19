@@ -355,11 +355,8 @@ function __is_hash ( &$array ) {
 }
 
 function __cat_file ( $dir, $path = NULL ) {
-    $directory_separator = preg_quote( '/', DIRECTORY_SEPARATOR );
     if (! is_array( $dir ) ) {
-        if ( preg_match( "/$directory_separator$/", $dir ) ) {
-            $dir = preg_replace( "/$directory_separator$/", '', $dir );
-        }
+        $dir = rtrim( $dir, DIRECTORY_SEPARATOR );
     } else {
         $directory = '';
         foreach ( $dir as $item ) {
@@ -370,10 +367,8 @@ function __cat_file ( $dir, $path = NULL ) {
     }
     if ( isset( $path ) ) {
         if (! is_array( $path ) ) {
-            if ( preg_match( "/$directory_separator$/", $path ) ) {
-                $path = preg_replace( "/$directory_separator$/", '', $path );
-            }
-            return $dir. DIRECTORY_SEPARATOR. $path;
+            $path = rtrim( $path, DIRECTORY_SEPARATOR );
+            return $dir . DIRECTORY_SEPARATOR . $path;
         } else {
             foreach ( $path as $item ) {
                 $dir .= DIRECTORY_SEPARATOR . $item;
