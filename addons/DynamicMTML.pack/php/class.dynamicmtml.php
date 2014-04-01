@@ -1112,7 +1112,6 @@ class DynamicMTML {
         } else {
             $file = str_replace( '//', '/', $file );
         }
-        $file = strtr( $file, '../', '' );
         if ( DIRECTORY_SEPARATOR != '/' ) {
             $file = strtr( $file, '/', DIRECTORY_SEPARATOR );
         }
@@ -1142,10 +1141,11 @@ class DynamicMTML {
         }
         $file = urldecode( $file );
         if ( DIRECTORY_SEPARATOR != '/' ) {
-            $file = strtr( $file, '\\\\', '\\' );
+            $file = str_replace( '\\\\', '\\', $file );
         } else {
-            $file = strtr( $file, '//', '/' );
+            $file = str_replace( '//', '/', $file );
         }
+        $file = str_replace( '..' . DIRECTORY_SEPARATOR, '', $file );
         return $file;
     }
 
