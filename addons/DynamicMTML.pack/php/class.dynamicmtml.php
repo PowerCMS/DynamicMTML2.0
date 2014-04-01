@@ -1308,10 +1308,10 @@ class DynamicMTML {
     function chomp_dir ( $dir ) {
         if ( DIRECTORY_SEPARATOR != '/' ) {
             $dir = rtrim( $dir, '\\' );
-            $dir = strtr( $dir, '\\\\', '\\' );
+            $dir = str_replace( '\\\\', '\\', $dir );
         } else {
             $dir = rtrim( $dir, '/' );
-            $dir = strtr( $dir, '//', '/' );
+            $dir = str_replace( '//', '/', $dir );
         }
         return $dir;
     }
