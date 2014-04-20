@@ -89,6 +89,14 @@
             require_once( $lib );
         }
         return 1;
+    } else {
+        // Call from raw php
+        $filename = basename( $_SERVER[ 'SCRIPT_FILENAME' ] );
+        $mt_viewer = $mt->config( 'DynamicSiteBootstrapper' );
+        if (! $mt_viewer ) $mt_viewer = '.mtview.php';
+        if ( $filename != $mt_viewer ) {
+            return 1;
+        }
     }
     $mt_config = $mt->cfg_file;
     $static_path = $mt->config[ 'staticfilepath' ];
