@@ -6,10 +6,14 @@ class Log extends BaseObject {
     public function Save() {
         $mt = MT::get_instance();
         if ( $created_on = $this->created_on ) {
-            $this->created_on = $mt->db()->ts2db( $created_on );
+            if( preg_match( '/^[0-9]{14}$/', $created_on ) ) {
+                $this->created_on = $mt->db()->ts2db( $created_on );
+            }
         }
         if ( $modified_on = $this->modified_on ) {
-            $this->modified_on = $mt->db()->ts2db( $modified_on );
+            if( preg_match( '/^[0-9]{14}$/', $modified_on ) ) {
+                $this->modified_on = $mt->db()->ts2db( $modified_on );
+            }
         }
         $driver = $mt->config( 'ObjectDriver' );
         if ( strpos( $driver, 'SQLServer' ) !== FALSE ) {
