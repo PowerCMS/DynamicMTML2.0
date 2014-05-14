@@ -792,7 +792,9 @@ class DynamicMTML {
         if ( file_exists( $lock_file ) ) {
             $mtime = filemtime( $lock_file );
             $frequency = time() - $mtime;
-            if ( $frequency < 86400 ) {
+            $expiration = $this->config( 'DynamicWorkerExpiration' );
+            if (! $expiration ) $expiration = 300;
+            if ( $frequency < $expiration ) {
                 $msg = $this->translate( 'The process is skipped the lock file [_1] exists.', $lock_file );
                 $args = array( 'categoey' => $prefix,
                                'level' => 4,
