@@ -3,89 +3,96 @@
 <mt:IfBlogDynamicMTML>
 ##
 ## DynamicMTML generated this part; don't remove this line! ##
-## <version><$MTPluginVersion component="DynamicMTML"$></version>
-## <bootstrapper><$MTDynamicSiteBootstrapper$></bootstrapper>
+## <version><$mt:PluginVersion component="DynamicMTML"$></version>
+## <bootstrapper><$mt:DynamicSiteBootstrapper$></bootstrapper>
 
-Options -Indexes +SymLinksIfOwnerMatch
-DirectoryIndex <$MTBlogRelativeURL$><$MTDynamicSiteBootstrapper$>
+Options -Indexes
+DirectoryIndex <$mt:BlogRelativeURL$><$mt:DynamicSiteBootstrapper$>
 <IfModule mod_rewrite.c>
+  Options +FollowSymLinks
   RewriteEngine On
   RewriteCond %{REQUEST_FILENAME} !-f [OR]
   RewriteCond %{REQUEST_FILENAME} -d [OR]
-  RewriteCond %{REQUEST_FILENAME} ^[^.]+$|\.(<$MTBlogFilesMatch$>)$ [NC]
-  RewriteRule ^ <$MTBlogRelativeURL$><$MTDynamicSiteBootstrapper$> [L]
+#  RewriteCond %{REQUEST_FILENAME} !/mt-static/html/editor-content\.html$ [NC]
+#  RewriteCond %{REQUEST_FILENAME} !/mt-static/html/blank\.html$ [NC]
+  RewriteCond %{REQUEST_FILENAME} ^[^.]+$|\.(<$mt:BlogFilesMatch$>)$ [NC]
+  RewriteRule ^ <$mt:BlogRelativeURL$><$mt:DynamicSiteBootstrapper$> [L]
 </IfModule>
 <IfModule !mod_rewrite.c>
   Order Deny,Allow
-  Deny from all 
-<FilesMatch (^(|[^.]+)|<$MTDynamicSiteBootstrapper$>?)$>
+  Deny from all
+<FilesMatch (^(|[^.]+)|<$mt:DynamicSiteBootstrapper$>)$>
   Allow from all
 </FilesMatch>
-  ErrorDocument 403 <$MTBlogRelativeURL$><$MTDynamicSiteBootstrapper$>
-  ErrorDocument 404 <$MTBlogRelativeURL$><$MTDynamicSiteBootstrapper$>
+  ErrorDocument 403 <$mt:BlogRelativeURL$><$mt:DynamicSiteBootstrapper$>
+  ErrorDocument 404 <$mt:BlogRelativeURL$><$mt:DynamicSiteBootstrapper$>
 </IfModule>
 php_flag short_open_tag off
 ## DynamicMTML generated this part; don't remove this line! /DynamicMTML ##
 <mt:Else>
 ## %%%%%%% Movable Type generated this part; don't remove this line! %%%%%%%
-# Disable fancy indexes, so <$MTDynamicSiteBootstrapper$> gets a chance...
-Options -Indexes +SymLinksIfOwnerMatch
+# Disable fancy indexes, so <$mt:DynamicSiteBootstrapper$> gets a chance...
+Options -Indexes
   <IfModule mod_rewrite.c>
+  Options +FollowSymLinks
   # The mod_rewrite solution is the preferred way to invoke
   # dynamic pages, because of its flexibility.
 
-  # Add <$MTDynamicSiteBootstrapper$> to the list of DirectoryIndex options, listing it last,
+  # Add <$mt:DynamicSiteBootstrapper$> to the list of DirectoryIndex options, listing it last,
   # so it is invoked only if the common choices aren't present...
   <IfModule mod_dir.c>
-    #DirectoryIndex index.php index.html index.htm default.asp default.aspx default.html default.htm <$MTBlogRelativeURL$><$MTDynamicSiteBootstrapper$>
-    DirectoryIndex <$MTIndexBasename extension="1"$> <$MTBlogRelativeURL$><$MTDynamicSiteBootstrapper$>
+    #DirectoryIndex index.php index.html index.htm default.asp default.aspx default.html default.htm <$mt:BlogRelativeURL$><$mt:DynamicSiteBootstrapper$>
+    DirectoryIndex <$mt:IndexBasename extension="1"$> <$mt:BlogRelativeURL$><$mt:DynamicSiteBootstrapper$>
   </IfModule>
 
   RewriteEngine On
 
-  # don't serve <$MTDynamicSiteBootstrapper$> if the request is for a real directory
+  # don't serve <$mt:DynamicSiteBootstrapper$> if the request is for a real directory
   # (allows the DirectoryIndex lookup to function)
   RewriteCond %{REQUEST_FILENAME} !-d
 
-  # don't serve <$MTDynamicSiteBootstrapper$> if the request is for a real file
+  # don't serve <$mt:DynamicSiteBootstrapper$> if the request is for a real file
   # (allows the actual file to be served)
   RewriteCond %{REQUEST_FILENAME} !-f
-  # anything else is handed to <$MTDynamicSiteBootstrapper$> for resolution
-  RewriteRule .* <$MTBlogRelativeURL$><$MTDynamicSiteBootstrapper$> [L]
+  # anything else is handed to <$mt:DynamicSiteBootstrapper$> for resolution
+  RewriteRule ^ <$mt:BlogRelativeURL$><$mt:DynamicSiteBootstrapper$> [L]
 </IfModule>
 
 <IfModule !mod_rewrite.c>
   # if mod_rewrite is unavailable, we forward any missing page
   # or unresolved directory index requests to mtview
-  # if <$MTDynamicSiteBootstrapper$> can resolve the request, it returns a 200
+  # if <$mt:DynamicSiteBootstrapper$> can resolve the request, it returns a 200
   # result code which prevents any 4xx error code from going
   # to the server's access logs. However, an error will be
   # reported in the error log file. If this is your only choice,
   # and you want to suppress these messages, adding a "LogLevel crit"
   # directive within your VirtualHost or root configuration for
   # Apache will turn them off.
-  ErrorDocument 403 <$MTBlogRelativeURL$><$MTDynamicSiteBootstrapper$>
-  ErrorDocument 404 <$MTBlogRelativeURL$><$MTDynamicSiteBootstrapper$>
+  ErrorDocument 403 <$mt:BlogRelativeURL$><$mt:DynamicSiteBootstrapper$>
+  ErrorDocument 404 <$mt:BlogRelativeURL$><$mt:DynamicSiteBootstrapper$>
 </IfModule>
 ## ******* Movable Type generated this part; don't remove this line! *******
 
 php_flag short_open_tag off
-</mt:Else></mt:IfBlogDynamicMTML><mt:Else>
+</mt:IfBlogDynamicMTML><mt:Else>
 ## for PowerCMS Professional
-Options -Indexes +SymLinksIfOwnerMatch
-DirectoryIndex <$MTBlogRelativeURL$><$MTDynamicSiteBootstrapper$>
-<$MTBlogFilesMatchDirective$>
+Options -Indexes
+<IfModule mod_rewrite.c>
+  Options +FollowSymLinks
+</IfModule>
+DirectoryIndex <$mt:BlogRelativeURL$><$mt:DynamicSiteBootstrapper$>
+<$mt:BlogFilesMatchDirective$>
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteRule ^ <$MTBlogRelativeURL$><$MTDynamicSiteBootstrapper$> [L]
+  RewriteRule ^ <$mt:BlogRelativeURL$><$mt:DynamicSiteBootstrapper$> [L]
 </IfModule>
 <IfModule !mod_rewrite.c>
   Order Deny,Allow
-  Deny from all 
-<FilesMatch (^(|[^.]+)|<$MTDynamicSiteBootstrapper$>?)$>
+  Deny from all
+<FilesMatch (^(|[^.]+)|<$mt:DynamicSiteBootstrapper$>)$>
   Allow from all
 </FilesMatch>
-  ErrorDocument 403 <$MTBlogRelativeURL$><$MTDynamicSiteBootstrapper$>
+  ErrorDocument 403 <$mt:BlogRelativeURL$><$mt:DynamicSiteBootstrapper$>
 </IfModule>
 </FilesMatch>
 #<FilesMatch (?:^(?:|[^.]+)|\.(?i:html?))$>
@@ -93,13 +100,13 @@ DirectoryIndex <$MTBlogRelativeURL$><$MTDynamicSiteBootstrapper$>
 <FilesMatch (^(|[^.]+)|\.[Hh][Tt][Mm][Ll]?)$>
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteRule ^ <$MTBlogRelativeURL$><$MTDynamicSiteBootstrapper$> [L]
+  RewriteRule ^ <$mt:BlogRelativeURL$><$mt:DynamicSiteBootstrapper$> [L]
 </IfModule>
 <IfModule !mod_rewrite.c>
   Order Allow,Deny
   Deny from all
-  ErrorDocument 403 <$MTBlogRelativeURL$><$MTDynamicSiteBootstrapper$>
+  ErrorDocument 403 <$mt:BlogRelativeURL$><$mt:DynamicSiteBootstrapper$>
 </IfModule>
 </FilesMatch>
 php_flag short_open_tag off
-</mt:Else></mt:Unless>
+</mt:Unless>
