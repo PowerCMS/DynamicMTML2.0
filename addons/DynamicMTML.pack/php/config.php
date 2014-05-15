@@ -33,6 +33,7 @@ class DynamicMTML_pack extends MTPlugin {
             'DeleteFileAtPreview' => array( 'default' => 1 ),
             'PreviewServers' => array( 'default' => '' ),
             'DynamicWorkerExpiration' => array( 'default' => 300 ),
+            'PHPPearDir' => array( 'default' => '' ),
             'SmartphonePreviewAgent'
                 => array( 'default' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 5_1 like Mac OS X)' ),
         ),

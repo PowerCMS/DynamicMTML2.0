@@ -73,6 +73,8 @@ config_settings:
     DynamicWorkerExpiration:
         default: 300
         updatable: 1
+    PHPPearDir:
+        updatable: 1
     SmartphonePreviewAgent:
         default: Mozilla/5.0 (iPhone; CPU iPhone OS 5_1 like Mac OS X)
 object_types:
