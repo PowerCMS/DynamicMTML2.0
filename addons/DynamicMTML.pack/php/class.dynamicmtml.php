@@ -1448,7 +1448,7 @@ class DynamicMTML {
                 } else {
                     $sessid = $session->id;
                 }
-                $expires = NULL;
+                $expires = 0;
                 if ( $remember ) {
                     $expires = time() + 60 * 60 * 24 * 365;
                 }
