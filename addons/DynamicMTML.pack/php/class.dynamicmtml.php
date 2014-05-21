@@ -1755,13 +1755,13 @@ class DynamicMTML {
             $real_pass = $client_author->password;
             if ( strpos( $real_pass, '$6$' ) === 0 ) {
                 $search = preg_quote( '$6$', '/' );
-                $real_pass = preg_replace( "/^$search/", '' );
+                $real_pass = preg_replace( "/^$search/", '', $real_pass );
                 list ( $salt, $real_pass ) = explode( '$', $real_pass );
                 $digest = base64_encode( hash( 'sha512', $salt . $password, 1 ) );
                 $password = rtrim( $digest, '==' );
             } elseif ( strpos( $real_pass, '{SHA}' ) === 0 ) {
                 $search = preg_quote( '{SHA}', '/' );
-                $real_pass = preg_replace( "/^$search/", '' );
+                $real_pass = preg_replace( "/^$search/", '', $real_pass );
                 list ( $salt, $real_pass ) = explode( '$', $real_pass );
                 $password = hash( 'sha1', $salt . $password );
             } else {
@@ -2604,7 +2604,7 @@ class DynamicMTML {
             $site_url = $this->site_url( $blog, 1 );
             $site_path = $this->site_path( $blog, 1 );
             $search = preg_quote( $site_url, '/' );
-            $path = preg_replace( "/^$search/", $site_path );
+            $path = preg_replace( "/^$search/", $site_path, $site_url );
             return $path;
         }
     }
