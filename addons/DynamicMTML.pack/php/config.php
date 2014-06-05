@@ -23,6 +23,7 @@ class DynamicMTML_pack extends MTPlugin {
             'DynamicCachePrefix' => array( 'default' => 'dynamicmtmlcache' ),
             'DynamicCacheTTL' => array( 'default' => 7200 ),
             'DynamicCacheObjects' => array( 'default' => 'blog,template,category,entry' ),
+            'DynamicCacheConfig' => array( 'default' => 1 ),
             'DynamicMemcachedServers' => array( 'default' => '' ),
             'DynamicMemcachedCompressed' => array( 'default' => '' ),
             'DynamicLoadYAML' => array( 'default' => '' ),
@@ -149,12 +150,15 @@ class DynamicMTML_pack extends MTPlugin {
             }
             $prefix = $this->app->config( 'DynamicCachePrefix' );
             $this->app->cache_prefix = $prefix;
-            if ( $cachedriver === 'session' ) return FALSE;
+            if (! $this->app->config( 'DynamicCacheConfig' ) ) {
+                return TRUE;
+            }
+            if ( $cachedriver === 'session' ) return TRUE;
             $key = $prefix . '_config';
             $data = $driver->get( $key );
             if ( is_array( $data ) ) {
                 foreach ( $data as $key => $value ) {
-                    $cfg[ $key ] = $value;
+                    $cfg[ $key ] = $value; // FIXME :: Array or Hash
                     if ( $key == 'debugmode' ) {
                         if ( $value && intval( $value ) ) {
                             $mt->debugging = TRUE;

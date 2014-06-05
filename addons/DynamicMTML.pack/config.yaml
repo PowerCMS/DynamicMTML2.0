@@ -58,6 +58,8 @@ config_settings:
     DynamicCacheObjects:
         default: blog,template,category,entry
         updatable: 1
+    DynamicCacheConfig:
+        default: 1
     DynamicMemcachedServers:
     DynamicMemcachedCompressed:
     DynamicLoadYAML:

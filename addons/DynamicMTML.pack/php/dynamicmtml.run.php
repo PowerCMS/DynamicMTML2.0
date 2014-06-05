@@ -269,7 +269,7 @@
             $driver = $app->config( 'objectdriver' );
             $driver = preg_replace( '/^DB[ID]::/', '', $driver );
             $driver or $driver = 'mysql';
-            $driver = strtolower($driver);
+            $driver = strtolower( $driver );
             $cfg =& $app->config;
             $cfg[ 'dbdriver' ] = $driver;
             if ( $driver == 'mysql' or $driver == 'postgres' ) {
