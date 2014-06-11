@@ -105,6 +105,7 @@
     }
     $mt_dir = dirname( $mt_config );
     $blog_id = $mt->blog_id;
+    if (! $blog_id ) return;
     $blog = $mt->db()->fetch_blog( $blog_id );
     $size_limit = 524288;
     $server_cache = $blog->search_cache_expiration;
