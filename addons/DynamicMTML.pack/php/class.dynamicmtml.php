@@ -901,7 +901,11 @@ class DynamicMTML {
                                         if ( $session->_saved ) {
                                             $session->Update();
                                         } else {
-                                            $session->Save();
+                                            try {
+                                                $session->Save();
+                                            } catch ( Exception $e ) {
+                                                $session->Update();
+                                            }
                                         }
                                     }
                                 }
@@ -4120,8 +4124,10 @@ class DynamicMTML {
             }
             if (! $set_class ) {
                 if ( $_obj->has_column( 'class' ) ) {
-                    if ( $where ) $where .= " AND ";
-                    $where .= " {$prefix}class='{$classname}' ";
+                    if ( $class != 'Session' ) {
+                        if ( $where ) $where .= " AND ";
+                        $where .= " {$prefix}class='{$classname}' ";
+                    }
                 }
             }
             if ( $extra_terms ) {
