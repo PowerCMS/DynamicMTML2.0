@@ -4,7 +4,7 @@ key:  dynamicmtml
 author_name: Alfasado Inc.
 author_link: http://alfasado.net/
 pack_link: https://github.com/PowerCMS/DynamicMTML
-version: 2.03
+version: 2.04
 schema_version: 1.02
 l10n_class: DynamicMTML::L10N
 init_request: >
@@ -76,6 +76,8 @@ config_settings:
         default: 300
         updatable: 1
     PHPPearDir:
+        updatable: 1
+    DynamicInitPluginsLater:
         updatable: 1
     SmartphonePreviewAgent:
         default: Mozilla/5.0 (iPhone; CPU iPhone OS 5_1 like Mac OS X)

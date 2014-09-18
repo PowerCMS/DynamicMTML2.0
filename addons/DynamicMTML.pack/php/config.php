@@ -7,7 +7,7 @@ class DynamicMTML_pack extends MTPlugin {
         'key'  => 'dynamicmtml',
         'author_name' => 'Alfasado Inc.',
         'author_link' => 'http://alfasado.net/',
-        'version' => '2.03',
+        'version' => '2.04',
         'description' => 'DynamicMTML is PHP extension for Movable Type.',
         'config_settings' => array( // mt-config.cgi
             'DynamicForceCompile' => array( 'default' => 0 ),
@@ -34,6 +34,7 @@ class DynamicMTML_pack extends MTPlugin {
             'DeleteFileAtPreview' => array( 'default' => 1 ),
             'PreviewServers' => array( 'default' => '' ),
             'DynamicWorkerExpiration' => array( 'default' => 300 ),
+            'DynamicInitPluginsLater' => array( 'default' => 0 ),
             'PHPPearDir' => array( 'default' => '' ),
             'SmartphonePreviewAgent'
                 => array( 'default' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 5_1 like Mac OS X)' ),

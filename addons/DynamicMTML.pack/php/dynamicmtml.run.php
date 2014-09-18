@@ -288,7 +288,11 @@
             $ctx->stash( 'no_database', 1 );
             $app->set_context( $mt, $ctx );
         }
-        $mt->init_plugins();
+        $later = $app->config( 'DynamicInitPluginsLater' );
+        $mt->config( 'DynamicInitPluginsLater', $later );
+        if (! $later ) {
+            $mt->init_plugins();
+        }
         $ctx->stash( 'callback_dir', $app->stash( 'callback_dir' ) );
         $ctx->stash( 'preview', $preview );
         $ctx->stash( 'content_type', $contenttype );
