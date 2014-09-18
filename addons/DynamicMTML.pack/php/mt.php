@@ -1,25 +1,28 @@
 <?php
+
 /***
  * Loading exception classes
  */
 if (! isset( $mt_dir ) ) $mt_dir = dirname( dirname( dirname( dirname( __FILE__ ) ) ) ); //
 require_once($mt_dir.DIRECTORY_SEPARATOR.'php'.DIRECTORY_SEPARATOR.'lib'.DIRECTORY_SEPARATOR.'class.exception.php'); //
-//require_once('lib/class.exception.php'); //
+
+//require_once('lib/class.exception.php');
 
 define('VERSION', '6.0');
-define('PRODUCT_VERSION', '6.0');
+define('PRODUCT_VERSION', '6.0.4');
+define('DATA_API_DEFAULT_VERSION', '1');
 
-$PRODUCT_NAME = 'Movable Type';
+$PRODUCT_NAME = 'Movable Type Advanced';
 if($PRODUCT_NAME == '__PRODUCT' . '_NAME__')
     $PRODUCT_NAME = 'Movable Type';
 define('PRODUCT_NAME', $PRODUCT_NAME);
 
-$RELEASE_NUMBER = '0';
+$RELEASE_NUMBER = '4';
 if ( $RELEASE_NUMBER == '__RELEASE_' . 'NUMBER__' )
-    $RELEASE_NUMBER = 0;
+    $RELEASE_NUMBER = 4;
 define('RELEASE_NUMBER', $RELEASE_NUMBER);
 
-$PRODUCT_VERSION_ID = '6.0rc1';
+$PRODUCT_VERSION_ID = '6.0.4';
 if ( $PRODUCT_VERSION_ID == '__PRODUCT_' . 'VERSION_ID__' )
     $PRODUCT_VERSION_ID = PRODUCT_VERSION;
 $VERSION_STRING;
@@ -57,8 +60,13 @@ class MT {
     protected $mt_dir; //
     protected $php_dir; //
     protected $app; //
+
     private  $cache_driver = null;
     private static $_instance = null;
+
+    static public $config_type_array = array('pluginpath', 'alttemplate', 'outboundtrackbackdomains', 'memcachedservers', 'userpasswordvalidation');
+    static public $config_type_hash  = array('pluginswitch', 'pluginschemaversion', 'commenterregistration');
+
     /***
      * Constructor for MT class.
      * Currently, constructor moved to private method because this class implemented Singleton Design Pattern.
@@ -66,8 +74,18 @@ class MT {
      *
      * $mt = MT::get_instance();
      */
-    // private function __construct($blog_id = null, $cfg_file = null) { //
-    // Not private function // D
+/*
+    private function __construct($blog_id = null, $cfg_file = null) {
+        error_reporting(E_ALL ^ E_NOTICE ^ E_WARNING);
+        try {
+            $this->id = md5(uniqid('MT',true));
+            $this->init($blog_id, $cfg_file);
+        } catch (Exception $e ) {
+            throw new MTInitException( $e, $this->debugging );
+        }
+    }
+*/
+
     function __construct($blog_id = null, $cfg_file = null) { //
         global $mt_dir; //
         global $app; //
@@ -159,8 +177,11 @@ class MT {
 
     function init_plugins() {
         $plugin_paths = $this->config('PluginPath');
-        $ctx =& $this->context();
-
+        $ctx =& $this->context();  //
+        if ( $ctx->stash( 'plugins_initialized' ) ) {  //
+            return;  //
+        }  //
+        $ctx->stash( 'plugins_initialized', 1 );  //
         foreach ($plugin_paths as $path) {
             if ( !is_dir($path) )
                 $path = $this->config('MTDir') . DIRECTORY_SEPARATOR . $path;
@@ -224,7 +245,9 @@ class MT {
                 $this->config('Database'),
                 $this->config('DBHost'),
                 $this->config('DBPort'),
-                $this->config('DBSocket'));
+                $this->config('DBSocket'),
+                $this->config('DBMaxRetries'),
+                $this->config('DBRetryInterval'));
         }
         return $this->db;
     }
@@ -261,6 +284,8 @@ class MT {
         if (isset($this->config)) return $config;
 
         $this->cfg_file = $file;
+
+        $this->cfg_file = $file;
         $app = $this->app; //
         if ( $app ) { //
             $cfg = $app->config; //
@@ -269,8 +294,6 @@ class MT {
         if (! $cfg ) $cfg = array(); //
         // $cfg = array(); //
         if (! $original ) { //
-            $type_array = array('pluginpath', 'alttemplate', 'outboundtrackbackdomains', 'memcachedservers', 'userpasswordvalidation');
-            $type_hash  = array('commenterregistration');
             if ($fp = file($file)) {
                 foreach ($fp as $line) {
                     // search through the file
@@ -279,10 +302,10 @@ class MT {
                         if (preg_match('/^\s*(\S+)\s+(.*)$/', $line, $regs)) {
                             $key = strtolower(trim($regs[1]));
                             $value = trim($regs[2]);
-                            if (in_array($key, $type_array)) {
+                            if (in_array($key, self::$config_type_array)) {
                                 $cfg[$key][] = $value;
                             }
-                            elseif (in_array($key, $type_hash)) {
+                            elseif (in_array($key, self::$config_type_hash)) {
                                 $hash = preg_split('/\=/', $value, 2);
                                 $cfg[$key][strtolower(trim($hash[0]))] = trim($hash[1]);
                             } else {
@@ -292,9 +315,9 @@ class MT {
                     }
                 }
             } else {
-                // die("Unable to open configuration file $file"); //
+                die("Unable to open configuration file $file");
             }
-        } //
+        }
         // setup directory locations
         // location of mt.php
         // $cfg['phpdir'] = realpath(dirname(__FILE__)); //
@@ -425,8 +448,6 @@ class MT {
             $cfg['xmlrpcscript'] = 'mt-xmlrpc.cgi';
         isset($cfg['searchscript']) or
             $cfg['searchscript'] = 'mt-search.cgi';
-        isset($cfg['notifyscript']) or
-            $cfg['notifyscript'] = 'mt-add-notify.cgi';
         isset($cfg['defaultlanguage']) or
             $cfg['defaultlanguage'] = 'en_US';
         isset($cfg['globalsanitizespec']) or
@@ -475,6 +496,12 @@ class MT {
             $cfg['userpasswordminlength'] = 8;
         isset($cfg['bulkloadmetaobjectslimit']) or
             $cfg['bulkloadmetaobjectslimit'] = 100;
+        isset($cfg['dbmaxretries']) or
+            $cfg['dbmaxretries'] = 3;
+        isset($cfg['dbretryintercal']) or
+            $cfg['dbretryinterval'] = 1;
+        isset($cfg['dataapiscript']) or
+            $cfg['dataapiscript'] = 'mt-data-api.cgi';
     }
 
     function configure_paths($blog_site_path) {
@@ -646,6 +673,7 @@ class MT {
                 }
                 $archiver->template_params($ctx);
             }
+
             if ($cat) {
                 $archive_category = $mtdb->fetch_category($cat);
                 // Folder Archive Support //
@@ -857,16 +885,10 @@ class MT {
     }
 
     function error_handler($errno, $errstr, $errfile, $errline) {
-        if ($errno & (E_ALL ^ E_NOTICE)) {
+        if ($errno & (E_ALL ^ E_NOTICE ^ E_WARNING)) {
             if ( !empty( $this->db ) ) {
-                if (version_compare(phpversion(), '4.3.0', '>=')) {
-                    $charset = $this->config('PublishCharset');
-                    $errstr = htmlentities($errstr, ENT_COMPAT, $charset);
-                    $errfile = htmlentities($errfile, ENT_COMPAT, $charset);
-                } else {
-                    $errstr = htmlentities($errstr, ENT_COMPAT);
-                    $errfile = htmlentities($errfile, ENT_COMPAT);
-                }
+                $errstr = encode_html_entities($errstr, ENT_COMPAT);
+                $errfile = encode_html_entities($errfile, ENT_COMPAT);
                 $mtphpdir = $this->config('PHPDir');
                 $ctx =& $this->context();
                 $ctx->stash('blog_id', $this->blog_id);
@@ -981,4 +1003,5 @@ class MT {
 }
 
 // Moved to lib/mt_util.php //
+
 ?>
