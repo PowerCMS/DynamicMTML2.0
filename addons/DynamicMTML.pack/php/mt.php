@@ -12,7 +12,7 @@ define('VERSION', '6.0');
 define('PRODUCT_VERSION', '6.0.4');
 define('DATA_API_DEFAULT_VERSION', '1');
 
-$PRODUCT_NAME = 'Movable Type Advanced';
+$PRODUCT_NAME = 'Movable Type';
 if($PRODUCT_NAME == '__PRODUCT' . '_NAME__')
     $PRODUCT_NAME = 'Movable Type';
 define('PRODUCT_NAME', $PRODUCT_NAME);
@@ -158,8 +158,10 @@ class MT {
         // $mtdir = dirname(dirname(__FILE__)); //
         $mtdir = $this->mt_dir; //
         $path = $mtdir . DIRECTORY_SEPARATOR . "addons";
-        if (is_dir($path)) {
+        if (is_dir($path)) { //
             $ctx =& $this->context();
+            // Custom Sort //
+            $plugin_dirs = array();
             if ($dh = opendir($path)) {
                 while (($file = readdir($dh)) !== false) {
                     if ($file == "." || $file == "..") {
@@ -168,10 +170,27 @@ class MT {
                     $plugin_dir = $path . DIRECTORY_SEPARATOR . $file
                         . DIRECTORY_SEPARATOR . 'php';
                     if (is_dir($plugin_dir))
-                        $ctx->add_plugin_dir($plugin_dir);
+                         $plugin_dirs[] = $plugin_dir;
                 }
                 closedir($dh);
             }
+            sort( $plugin_dirs );
+            foreach ( $plugin_dirs as $plugin_dir ) {
+                $ctx->add_plugin_dir($plugin_dir);
+            }
+            /// Custom Sort
+            // if ($dh = opendir($path)) {
+            //     while (($file = readdir($dh)) !== false) {
+            //         if ($file == "." || $file == "..") {
+            //             continue;
+            //         }
+            //         $plugin_dir = $path . DIRECTORY_SEPARATOR . $file
+            //             . DIRECTORY_SEPARATOR . 'php';
+            //         if (is_dir($plugin_dir))
+            //             $ctx->add_plugin_dir($plugin_dir);
+            //     }
+            //     closedir($dh);
+            // }
         }
     }
 
@@ -185,7 +204,9 @@ class MT {
         foreach ($plugin_paths as $path) {
             if ( !is_dir($path) )
                 $path = $this->config('MTDir') . DIRECTORY_SEPARATOR . $path;
-
+            
+            // Custom Sort
+            $plugin_dirs = array();
             if ($dh = @opendir($path)) {
                  while (($file = readdir($dh)) !== false) {
                      if ($file == "." || $file == "..")
@@ -193,10 +214,26 @@ class MT {
                      $plugin_dir = $path . DIRECTORY_SEPARATOR . $file
                          . DIRECTORY_SEPARATOR . 'php';
                      if (is_dir($plugin_dir))
-                         $ctx->add_plugin_dir($plugin_dir);
+                         $plugin_dirs[] = $plugin_dir;
                  }
                  closedir($dh);
             }
+            sort( $plugin_dirs );
+            foreach ( $plugin_dirs as $plugin_dir ) {
+                $ctx->add_plugin_dir($plugin_dir);
+            }
+            /// Custom Sort
+            // if ($dh = @opendir($path)) {
+            //      while (($file = readdir($dh)) !== false) {
+            //          if ($file == "." || $file == "..")
+            //              continue;
+            //          $plugin_dir = $path . DIRECTORY_SEPARATOR . $file
+            //              . DIRECTORY_SEPARATOR . 'php';
+            //          if (is_dir($plugin_dir))
+            //              $ctx->add_plugin_dir($plugin_dir);
+            //      }
+            //      closedir($dh);
+            // }
         }
 
         $plugin_dir = $this->config('PHPDir') . DIRECTORY_SEPARATOR
