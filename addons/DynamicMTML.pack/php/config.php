@@ -234,6 +234,7 @@ class DynamicMTML_pack extends MTPlugin {
                 $app->stash( 'using_cached_fileinfo', 1 );
                 $app->stash( 'fileinfo', $data );
             }
+            $cfg_objects = $app->config( 'DynamicCacheObjects' );
             if (! $cfg_objects ) return;
             // TODO::author logged in
             foreach ( $objects as $obj ) {

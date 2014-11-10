@@ -30,7 +30,11 @@ class DynamicCache extends DynamicMTML {
             return $value;
         }
         if ( $type !== 'object' ) {
-            $ser = unserialize( $value );
+            try {
+                $ser = unserialize( $value );
+            } catch ( Exception $e ) {
+                return;
+            }
             if ( $ser === FALSE ) {
                 return $value;
             } elseif ( is_array( $ser ) ) {
