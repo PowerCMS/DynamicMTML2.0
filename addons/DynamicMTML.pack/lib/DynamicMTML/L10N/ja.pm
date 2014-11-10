@@ -26,6 +26,7 @@ our %Lexicon = (
         => '<code>[_1]</code>を作成できませんでした。サイトパスの下にある<code>[_1]</code>ファイルを削除するか[_1]のパーミッションを確認してください。',
     'Error: Movable Type cannot write to the search cache directory.<br />Please check the permissions for the directory called <code>[_1]</code>.'
         => 'クエリー付きリクエストのビルド結果をキャッシュするディレクトリを作成できません。<br /><code>[_1]</code>ディレクトリを作成してください。',
+    'Removes old page cache.' => 'ページキャッシュの定期クリア',
     );
 
 1;
