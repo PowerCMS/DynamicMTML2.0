@@ -216,3 +216,8 @@ tags:
         make_seo_basename: $dynamicmtml::DynamicMTML::Tags::_filter_make_seo_basename
         intval: $dynamicmtml::DynamicMTML::Tags::_filter_intval
         trimwhitespace: $dynamicmtml::DynamicMTML::Tags::_filter_trimwhitespace
+tasks:
+    FlushPageCache:
+        label: Removes old page cache.
+        code: $dynamicmtml::DynamicMTML::Cache::_task_flush_page_cache
+        frequency: 1800

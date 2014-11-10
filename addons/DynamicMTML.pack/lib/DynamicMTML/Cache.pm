@@ -3,6 +3,8 @@ package DynamicMTML::Cache;
 use strict;
 use warnings;
 
+use PowerCMS::Util qw( get_children_files powercms_files_dir );
+
 sub new {
     my $class = shift;
     my %args  = @_;
@@ -67,6 +69,28 @@ sub flush_by_key {
     }
     return undef if $error;
     return $do;
+}
+
+sub _task_flush_page_cache {
+    require MT::FileMgr;
+    my $fmgr = MT::FileMgr->new( 'Local' ) or die MT::FileMgr->errstr;
+    my $powercms_files_dir = File::Spec->catdir( powercms_files_dir(), 'cache' );
+    my @children = get_children_files( $powercms_files_dir );
+    my $ttl = MT->config( 'DynamicCacheTTL' );
+    my $prefix = quotemeta( MT->config( 'DynamicCachePrefix' ) );
+    $ttl += 60;
+    my $now = time();
+    for my $child( @children ) {
+        if ( $child !~ $prefix ) {
+            my @stat = stat $child;
+            my $mod = $stat[ 9 ];
+            my $te = $now - $mod;
+            if ( $te > $ttl ) {
+                $fmgr->delete( $child );
+            }
+        }
+    }
+    1;
 }
 
 1;
