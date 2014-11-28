@@ -734,19 +734,16 @@ class DynamicMTML {
             if ( !is_array( $tags ) ) {
                 continue;
             }
-            foreach ( $tags as $tag => $funk ) {
+            foreach ( $tags as $tag => $hdlr ) {
                 $tag = strtolower( $tag );
-                if ( strpos( $funk, '::' ) !== FALSE ) {
-                    $path = explode( '::', $funk );
-                    $funk = end( $path );
-                }
+                $hdlr = preg_replace('/\A.*::/', '', $hdlr);
                 if ( $kind === 'block' ) {
                     $tag = rtrim( $tag, '?' );
-                    $blocks[ $tag ] = array( $plugin_key => $funk );
+                    $blocks[ $tag ] = array( $plugin_key => $hdlr );
                 } elseif ( $kind === 'function' ) {
-                    $functions[ $tag ] = array( $plugin_key => $funk );
+                    $functions[ $tag ] = array( $plugin_key => $hdlr );
                 } elseif ( $kind === 'modifier' ) {
-                    $modifiers[ $tag ] = array( $plugin_key => $funk );
+                    $modifiers[ $tag ] = array( $plugin_key => $hdlr );
                 }
             }
         }
