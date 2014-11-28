@@ -722,7 +722,6 @@ class DynamicMTML {
     }
 
     public static function __adjust_tags ( $config, &$blocks, &$functions, &$modifiers ) {
-        $plugin_key = $config[ 'plugin_key' ];
         if ( !isset( $config[ 'tags' ] ) ) {
             return;
         }
@@ -730,19 +729,28 @@ class DynamicMTML {
         if ( !is_array( $config_tags ) ) {
             return;
         }
+        $plugin_key = $config[ 'plugin_key' ];
         foreach ( $config_tags as $kind => $tags ) {
             if ( !is_array( $tags ) ) {
                 continue;
             }
-            foreach ( $tags as $tag => $hdlr ) {
-                $tag = strtolower( $tag );
-                $hdlr = preg_replace('/\A.*::/', '', $hdlr);
-                if ( $kind === 'block' ) {
+            if ( $kind === 'block' ) {
+                foreach ( $tags as $tag => $hdlr ) {
                     $tag = rtrim( $tag, '?' );
+                    $tag = strtolower( $tag );
+                    $hdlr = preg_replace('/\A.*::/', '', $hdlr);
                     $blocks[ $tag ] = array( $plugin_key => $hdlr );
-                } elseif ( $kind === 'function' ) {
+                }
+            } elseif ( $kind === 'function' ) {
+                foreach ( $tags as $tag => $hdlr ) {
+                    $tag = strtolower( $tag );
+                    $hdlr = preg_replace('/\A.*::/', '', $hdlr);
                     $functions[ $tag ] = array( $plugin_key => $hdlr );
-                } elseif ( $kind === 'modifier' ) {
+                }
+            } elseif ( $kind === 'modifier' ) {
+                foreach ( $tags as $tag => $hdlr ) {
+                    $tag = strtolower( $tag );
+                    $hdlr = preg_replace('/\A.*::/', '', $hdlr);
                     $modifiers[ $tag ] = array( $plugin_key => $hdlr );
                 }
             }
