@@ -723,27 +723,30 @@ class DynamicMTML {
 
     public static function __adjust_tags ( $config, &$blocks, &$functions, &$modifiers ) {
         $plugin_key = $config[ 'plugin_key' ];
-        if ( isset( $config[ 'tags' ] ) ) {
-            $config_tags = $config[ 'tags' ];
-            if ( is_array( $config_tags ) ) {
-                foreach ( $config_tags as $kind => $tags ) {
-                    if ( is_array( $tags ) ) {
-                        foreach ( $tags as $tag => $funk ) {
-                            $tag = strtolower( $tag );
-                            if ( strpos( $funk, '::' ) !== FALSE ) {
-                                $path = explode( '::', $funk );
-                                $funk = end( $path );
-                            }
-                            if ( $kind === 'block' ) {
-                                $tag = rtrim( $tag, '?' );
-                                $blocks[ $tag ] = array( $plugin_key => $funk );
-                            } elseif ( $kind === 'function' ) {
-                                $functions[ $tag ] = array( $plugin_key => $funk );
-                            } elseif ( $kind === 'modifier' ) {
-                                $modifiers[ $tag ] = array( $plugin_key => $funk );
-                            }
-                        }
-                    }
+        if ( !isset( $config[ 'tags' ] ) ) {
+            return;
+        }
+        $config_tags = $config[ 'tags' ];
+        if ( !is_array( $config_tags ) ) {
+            return;
+        }
+        foreach ( $config_tags as $kind => $tags ) {
+            if ( !is_array( $tags ) ) {
+                continue;
+            }
+            foreach ( $tags as $tag => $funk ) {
+                $tag = strtolower( $tag );
+                if ( strpos( $funk, '::' ) !== FALSE ) {
+                    $path = explode( '::', $funk );
+                    $funk = end( $path );
+                }
+                if ( $kind === 'block' ) {
+                    $tag = rtrim( $tag, '?' );
+                    $blocks[ $tag ] = array( $plugin_key => $funk );
+                } elseif ( $kind === 'function' ) {
+                    $functions[ $tag ] = array( $plugin_key => $funk );
+                } elseif ( $kind === 'modifier' ) {
+                    $modifiers[ $tag ] = array( $plugin_key => $funk );
                 }
             }
         }
