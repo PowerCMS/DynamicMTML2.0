@@ -517,7 +517,8 @@ sub _list_template_source {
                               return_args => $return_args,
                               magic_token => $app->current_magic(), } );
     my $label = $plugin_dynamicmtml->translate( 'Install DynamicMTML' );
-    my $new = "<li><a class=\"icon-left icon-related\" href=\"$link\">$label</a><li>" if $app->blog;
+    my $new = '';
+    $new = "<li><a class=\"icon-left icon-related\" href=\"$link\">$label</a><li>" if $app->blog;
     my $link2 = $app->base . $app->uri(
                     mode => 'flush_dynamic_cache',
                     args => { blog_id => $blog_id,
