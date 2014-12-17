@@ -36,6 +36,7 @@ class DynamicMTML_pack extends MTPlugin {
             'DynamicWorkerExpiration' => array( 'default' => 300 ),
             'DynamicInitPluginsLater' => array( 'default' => 0 ),
             'PHPPearDir' => array( 'default' => '' ),
+            'DynamicMTMLLicense' => array( 'default' => 'Commercial' ),
             'SmartphonePreviewAgent'
                 => array( 'default' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 5_1 like Mac OS X)' ),
         ),

@@ -5,17 +5,22 @@
     if (! isset( $mt_dir ) ) $mt_dir = dirname( dirname( dirname( $plugin_path ) ) );
     require_once( $mt_dir . DIRECTORY_SEPARATOR . 'php' . DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . 'MTUtil.php' );
     if (! isset( $mt_config ) ) $mt_config = $mt_dir . DIRECTORY_SEPARATOR . 'mt-config.cgi';
+    $mtphp = 'mt.php';
     global $mt;
     global $ctx;
     $ctx = NULL;
     $app = new DynamicMTML();
     $app->configure( $mt_config );
+    $COPYING = $mt_dir . DIRECTORY_SEPARATOR . 'COPYING';
+    if ( ( file_exists( $COPYING ) ) || ( $app->config( 'DynamicMTMLLicense' ) == 'GPL' ) ) {
+        $mtphp = 'mtos.php';
+    }
     $no_database = FALSE;
     $dynamic_config = $app->config;
     if (! $app->config( 'Database' ) || (! isset( $blog_id ) ) ) {
         $no_database = TRUE;
         $app->stash( 'no_database', 1 );
-        require_once( $plugin_path . 'mt.php' );
+        require_once( $plugin_path . $mtphp );
         $mt = new MT();
     }
     $include_static   = $app->config( 'DynamicIncludeStatic' );
@@ -248,7 +253,7 @@
     $app->run_callbacks( 'pre_run', $mt, $ctx, $args );
     require_once $mt_dir . DIRECTORY_SEPARATOR . 'php' . DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . 'class.exception.php';
     if (! $mt ) {
-        require_once( 'mt.php' );
+        require_once( $mtphp );
         try {
             $mt = MT::get_instance( $blog_id, $mt_config );
         } catch ( MTInitException $e ) {

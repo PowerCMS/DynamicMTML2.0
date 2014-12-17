@@ -81,6 +81,9 @@ config_settings:
         updatable: 1
     SmartphonePreviewAgent:
         default: Mozilla/5.0 (iPhone; CPU iPhone OS 5_1 like Mac OS X)
+    DynamicMTMLLicense:
+        default: Commercial
+        updatable: 1
 object_types:
     blog:
         dynamic_mtml: boolean
