@@ -2,6 +2,7 @@ package DynamicMTML::L10N::ja;
 
 use strict;
 use base 'DynamicMTML::L10N';
+use utf8;
 use vars qw( %Lexicon );
 
 our %Lexicon = (

@@ -9,7 +9,7 @@ require_once($mt_dir.DIRECTORY_SEPARATOR.'php'.DIRECTORY_SEPARATOR.'lib'.DIRECTO
 //require_once('lib/class.exception.php');
 
 define('VERSION', '6.0');
-define('PRODUCT_VERSION', '6.0.4');
+define('PRODUCT_VERSION', '6.0.6');
 define('DATA_API_DEFAULT_VERSION', '1');
 
 $PRODUCT_NAME = 'Movable Type';
@@ -17,12 +17,12 @@ if($PRODUCT_NAME == '__PRODUCT' . '_NAME__')
     $PRODUCT_NAME = 'Movable Type';
 define('PRODUCT_NAME', $PRODUCT_NAME);
 
-$RELEASE_NUMBER = '4';
+$RELEASE_NUMBER = '6';
 if ( $RELEASE_NUMBER == '__RELEASE_' . 'NUMBER__' )
     $RELEASE_NUMBER = 4;
 define('RELEASE_NUMBER', $RELEASE_NUMBER);
 
-$PRODUCT_VERSION_ID = '6.0.4';
+$PRODUCT_VERSION_ID = '6.0.6';
 if ( $PRODUCT_VERSION_ID == '__PRODUCT_' . 'VERSION_ID__' )
     $PRODUCT_VERSION_ID = PRODUCT_VERSION;
 $VERSION_STRING;
@@ -178,19 +178,6 @@ class MT {
             foreach ( $plugin_dirs as $plugin_dir ) {
                 $ctx->add_plugin_dir($plugin_dir);
             }
-            /// Custom Sort
-            // if ($dh = opendir($path)) {
-            //     while (($file = readdir($dh)) !== false) {
-            //         if ($file == "." || $file == "..") {
-            //             continue;
-            //         }
-            //         $plugin_dir = $path . DIRECTORY_SEPARATOR . $file
-            //             . DIRECTORY_SEPARATOR . 'php';
-            //         if (is_dir($plugin_dir))
-            //             $ctx->add_plugin_dir($plugin_dir);
-            //     }
-            //     closedir($dh);
-            // }
         }
     }
 
@@ -691,8 +678,10 @@ class MT {
             $this->cache_modified_check = true;
         }
         if ($this->conditional) {
-            $last_ts = $blog->blog_children_modified_on;
-            $last_modified = $ctx->_hdlr_date(array('ts' => $last_ts, 'format' => '%a, %d %b %Y %H:%M:%S GMT', 'language' => 'en', 'utc' => 1), $ctx);
+            $local_last_datetime = $blog->blog_children_modified_on;
+            $gmt_last_ts = datetime_to_timestamp($local_last_datetime);
+            $gmt_last_datetime = gmdate('YmdHis', $gmt_last_ts);
+            $last_modified = $ctx->_hdlr_date(array('ts' => $gmt_last_datetime, 'format' => '%a, %d %b %Y %H:%M:%S GMT', 'language' => 'en'), $ctx);
             $this->doConditionalGet($last_modified);
         }
 

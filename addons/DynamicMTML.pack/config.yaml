@@ -4,7 +4,7 @@ key:  dynamicmtml
 author_name: Alfasado Inc.
 author_link: http://alfasado.net/
 pack_link: https://github.com/PowerCMS/DynamicMTML
-version: 2.04
+version: 2.05
 schema_version: 1.02
 l10n_class: DynamicMTML::L10N
 init_request: >
@@ -82,7 +82,7 @@ config_settings:
     SmartphonePreviewAgent:
         default: Mozilla/5.0 (iPhone; CPU iPhone OS 5_1 like Mac OS X)
     DynamicMTMLLicense:
-        default: Commercial
+        default: GPL
         updatable: 1
 object_types:
     blog:
