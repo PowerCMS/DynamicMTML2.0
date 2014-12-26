@@ -27,7 +27,7 @@ class DynamicMTML_pack extends MTPlugin {
             'DynamicMemcachedServers' => array( 'default' => '' ),
             'DynamicMemcachedCompressed' => array( 'default' => '' ),
             'DynamicLoadYAML' => array( 'default' => '' ),
-            'DynamicContent2gzip' => array( 'default' => 0 ),
+            'DynamicContent2gzip' => array( 'default' => '' ),
             'DataAPIScript' => array( 'default' => 'mt-data-api.cgi' ),
             'DataAPIVersion' => array( 'default' => 'v1' ),
             'DataAPIURL' => array( 'default' => '' ),
@@ -36,7 +36,7 @@ class DynamicMTML_pack extends MTPlugin {
             'DynamicWorkerExpiration' => array( 'default' => 300 ),
             'DynamicInitPluginsLater' => array( 'default' => 0 ),
             'PHPPearDir' => array( 'default' => '' ),
-            'DynamicMTMLLicense' => array( 'default' => 'Commercial' ),
+            'DynamicMTMLLicense' => array( 'default' => 'GPL' ),
             'SmartphonePreviewAgent'
                 => array( 'default' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 5_1 like Mac OS X)' ),
         ),
