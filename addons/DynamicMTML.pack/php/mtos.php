@@ -8,21 +8,17 @@ require_once($mt_dir.DIRECTORY_SEPARATOR.'php'.DIRECTORY_SEPARATOR.'lib'.DIRECTO
 
 //require_once('lib/class.exception.php');
 
-define('VERSION', '6.0');
-define('PRODUCT_VERSION', '6.0.4');
-define('DATA_API_DEFAULT_VERSION', '1');
-
-$PRODUCT_NAME = 'Movable Type';
+define('VERSION', '5.2');
+define('PRODUCT_VERSION', '5.2.11');
+$PRODUCT_NAME = '__PRODUCT_NAME__';
 if($PRODUCT_NAME == '__PRODUCT' . '_NAME__')
     $PRODUCT_NAME = 'Movable Type';
 define('PRODUCT_NAME', $PRODUCT_NAME);
-
-$RELEASE_NUMBER = '4';
+$RELEASE_NUMBER = '__RELEASE_NUMBER__';
 if ( $RELEASE_NUMBER == '__RELEASE_' . 'NUMBER__' )
-    $RELEASE_NUMBER = 4;
+    $RELEASE_NUMBER = 11;
 define('RELEASE_NUMBER', $RELEASE_NUMBER);
-
-$PRODUCT_VERSION_ID = '6.0.4';
+$PRODUCT_VERSION_ID = '__PRODUCT_VERSION_ID__';
 if ( $PRODUCT_VERSION_ID == '__PRODUCT_' . 'VERSION_ID__' )
     $PRODUCT_VERSION_ID = PRODUCT_VERSION;
 $VERSION_STRING;
