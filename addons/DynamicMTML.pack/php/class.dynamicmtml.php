@@ -4005,7 +4005,7 @@ class DynamicMTML {
         } elseif ( $classname === 'page' ) {
             $prefix = 'entry';
         }
-        if ( isset( $_obj->_prefix ) ) {
+        if ( ( isset( $_obj->_prefix ) ) && ( $_obj->_prefix ) ) {
             $prefix = $_obj->_prefix;
         } else {
             $prefix .= '_';
@@ -4263,8 +4263,11 @@ class DynamicMTML {
             if ( strpos( $prefix, 'mt_' ) === 0 ) $prefix = substr( $prefix, 3 );
             $prefix .= '_';
         }
+        $mt = $this->mt();
+        $ctx = $this->ctx();
+        $args = $this->args;
         if (! $this->run_callbacks( "{$do}_permission_filter.{$class}",
-                                                $this->mt(), $this->ctx(), $this->args ) ) {
+                                                $mt, $ctx, $args ) ) {
             return $res;
         }
         if ( $do === 'save' ) {
@@ -4281,7 +4284,7 @@ class DynamicMTML {
             $this->stash( "{$prefix}:cached_object:" . $obj->id, NULL );
             // TODO:: Remove children and related objects.
         }
-        $this->run_callbacks( "post_{$do}.{$class}", $this->mt(), $this->ctx() );
+        $this->run_callbacks( "post_{$do}.{$class}", $mt, $ctx );
         return $res;
     }
 
