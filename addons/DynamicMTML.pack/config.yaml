@@ -178,6 +178,25 @@ tags:
         BuildCache: $dynamicmtml::DynamicMTML::Tags::_hdlr_buildcache
         VarsRecurse: $dynamicmtml::DynamicMTML::Tags::_hdlr_vars_recurse
         JSON2MTML: $dynamicmtml::DynamicMTML::Tags::_hdlr_json2mtml
+        SetHashVars: $dynamicmtml::GetHashVar::Tags::_hdlr_set_hash_vars
+        UnsetStash: $dynamicmtml::GetHashVar::Tags::_hdlr_unset_stash
+        UnsetVars: $dynamicmtml::GetHashVar::Tags::_hdlr_unset_vars
+        LocalVars: $dynamicmtml::GetHashVar::Tags::_hdlr_local_vars
+        YAML2Vars: $dynamicmtml::GetHashVar::Tags::_hdlr_yaml_to_vars
+        LoopWithSort: $dynamicmtml::GetHashVar::Tags::_hdlr_loop_with_sort
+        IfKeyExists?: $dynamicmtml::GetHashVar::Tags::_hdlr_key_exists
+        IfVarExists?: $dynamicmtml::GetHashVar::Tags::_hdlr_value_exists
+        IfValueExists?: $dynamicmtml::GetHashVar::Tags::_hdlr_value_exists
+        IfInArray?: $dynamicmtml::GetHashVar::Tags::_hdlr_in_array
+        IfNotInArray?: $dynamicmtml::GetHashVar::Tags::_hdlr_not_in_array
+        IfIsInArray?: $dynamicmtml::GetHashVar::Tags::_hdlr_in_array
+        IfVarIsScalar?: $dynamicmtml::GetHashVar::Tags::_hdlr_is_scalar
+        IfVarIsArray?: $dynamicmtml::GetHashVar::Tags::_hdlr_is_array
+        IfVarIsHash?: $dynamicmtml::GetHashVar::Tags::_hdlr_is_hash
+        MBIf?: $dynamicmtml::GetHashVar::Tags::_hdlr_mb_if
+        MBUnless?: $dynamicmtml::GetHashVar::Tags::_hdlr_mb_if
+        MBElseIf: $dynamicmtml::GetHashVar::Tags::_hdlr_mb_if
+        MBElse: $dynamicmtml::GetHashVar::Tags::_hdlr_mb_if
     function:
         ML: $dynamicmtml::DynamicMTML::Tags::_hdlr_raw_mtml_tag
         MTML: $dynamicmtml::DynamicMTML::Tags::_hdlr_raw_mtml_tag
@@ -212,6 +231,38 @@ tags:
         Rand: $dynamicmtml::DynamicMTML::Tags::_hdlr_rand
         DataAPIProxy: $dynamicmtml::DynamicMTML::Tags::_hdlr_data_api_proxy
         Error: $dynamicmtml::DynamicMTML::Tags::_hdlr_error
+        GetHashVar: $dynamicmtml::GetHashVar::Tags::_hdlr_get_hash_var
+        GetHashKey: $dynamicmtml::GetHashVar::Tags::_hdlr_get_hash_key
+        GetArrayVar: $dynamicmtml::GetHashVar::Tags::_hdlr_get_array_var
+        GetArrayJoin: $dynamicmtml::GetHashVar::Tags::_hdlr_array_join
+        GetArrayRand: $dynamicmtml::GetHashVar::Tags::_hdlr_array_rand
+        GetVarDump: $dynamicmtml::GetHashVar::Tags::_hdlr_get_vardump
+        SplitVar: $dynamicmtml::GetHashVar::Tags::_hdlr_split_var
+        DeleteVars: $dynamicmtml::GetHashVar::Tags::_hdlr_delete_vars
+        SaveVars: $dynamicmtml::GetHashVar::Tags::_hdlr_save_vars
+        ResetVars: $dynamicmtml::GetHashVar::Tags::_hdlr_reset_vars
+        RestoreVars: $dynamicmtml::GetHashVar::Tags::_hdlr_restore_vars
+        SaveStash: $dynamicmtml::GetHashVar::Tags::_hdlr_save_stash
+        ResetStash: $dynamicmtml::GetHashVar::Tags::_hdlr_reset_stash
+        RestoreStash: $dynamicmtml::GetHashVar::Tags::_hdlr_restore_stash
+        ArraySearch: $dynamicmtml::GetHashVar::Tags::_hdlr_array_search
+        ArraySort: $dynamicmtml::GetHashVar::Tags::_hdlr_array_sort
+        ArrayShuffle: $dynamicmtml::GetHashVar::Tags::_hdlr_array_shuffle
+        ArrayReverse: $dynamicmtml::GetHashVar::Tags::_hdlr_array_reverse
+        ArrayUnique: $dynamicmtml::GetHashVar::Tags::_hdlr_array_unique
+        AppendVar: $dynamicmtml::GetHashVar::Tags::_hdlr_append_var
+        Stash2Vars: $dynamicmtml::GetHashVar::Tags::_hdlr_stash_to_vars
+        SubstrVar: $dynamicmtml::GetHashVar::Tags::_hdlr_substrvar
+        ArrayMerge: $dynamicmtml::GetHashVar::Tags::_hdlr_array_merge
+        MergeArray: $dynamicmtml::GetHashVar::Tags::_hdlr_array_merge
+        HashMerge: $dynamicmtml::GetHashVar::Tags::_hdlr_hash_merge
+        MergeHash: $dynamicmtml::GetHashVar::Tags::_hdlr_hash_merge
+        SetPublishedEntryIds: $dynamicmtml::GetHashVar::Tags::_hdlr_set_published_entry_ids
+        SetPublishedPageIds: $dynamicmtml::GetHashVar::Tags::_hdlr_set_published_entry_ids
+        USleep: $dynamicmtml::GetHashVar::Tags::_hdlr_usleep
+        MBSetVar: $dynamicmtml::GetHashVar::Tags::_hdlr_mb_set_var
+        MBVar: $dynamicmtml::GetHashVar::Tags::_hdlr_mb_get_var
+        MBGetVar: $dynamicmtml::GetHashVar::Tags::_hdlr_mb_get_var
     modifier:
         pickup_extension: $dynamicmtml::DynamicMTML::Tags::_filter_pickup_extension
         highlightingsearchword: $dynamicmtml::DynamicMTML::Tags::_filter_highlightingsearchword
@@ -219,6 +270,16 @@ tags:
         make_seo_basename: $dynamicmtml::DynamicMTML::Tags::_filter_make_seo_basename
         intval: $dynamicmtml::DynamicMTML::Tags::_filter_intval
         trimwhitespace: $dynamicmtml::DynamicMTML::Tags::_filter_trimwhitespace
+        json2vars: $dynamicmtml::GetHashVar::Tags::_filter_json2vars
+        vars2json: $dynamicmtml::GetHashVar::Tags::_filter_vars2json
+        mtignore: $dynamicmtml::GetHashVar::Tags::_filter_mtignore
+        note: $dynamicmtml::GetHashVar::Tags::_filter_note
+        ts_format: $dynamicmtml::GetHashVar::Tags::_filter_ts_format
+        db2ts: $dynamicmtml::GetHashVar::Tags::_filter_db2ts
+    filters:
+        Entries:
+            entry_ids:
+                handler: $dynamicmtml::GetHashVar::Tags::_hdlr_entries_entry_ids
 tasks:
     FlushPageCache:
         label: Removes old page cache.
