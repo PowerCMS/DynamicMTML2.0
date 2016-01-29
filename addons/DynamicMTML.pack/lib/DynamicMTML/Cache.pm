@@ -81,7 +81,7 @@ sub _task_flush_page_cache {
     $ttl += 60;
     my $now = time();
     for my $child( @children ) {
-        if ( $child !~ $prefix ) {
+        if ( $child !~ /^$prefix/ ) {
             my @stat = stat $child;
             my $mod = $stat[ 9 ];
             my $te = $now - $mod;
