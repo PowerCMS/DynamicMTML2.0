@@ -134,6 +134,10 @@ class DynamicMTML_pack extends MTPlugin {
 
     // Callbacks
     function configure_from_db ( &$mt, $ctx, $args, $cfg ) {
+        $app = $ctx->stash( 'bootstrapper' );
+        if ( $app->stash( 'no_database' ) ) {
+            return FALSE;
+        }
         // $cfg =& $mt->config;
         if ( isset( $cfg[ 'dynamiccontent2gzip' ] ) ){
             ini_set( 'zlib.output_compression', 'On' );
