@@ -3,6 +3,10 @@
     global $mt;
     global $ctx;
     global $dmtml_exception;
+    if (! isset( $ctx ) ) {
+        $mt = MT::get_instance();
+        $ctx =& $mt->context();
+    }
     // init plugins tags
     if ( isset( $app ) ) {
         $tags_kind = array( 'block', 'function' );
