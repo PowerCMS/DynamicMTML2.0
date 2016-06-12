@@ -722,28 +722,36 @@ class DynamicMTML {
     }
 
     public static function __adjust_tags ( $config, &$blocks, &$functions, &$modifiers ) {
+        if ( !isset( $config[ 'tags' ] ) ) {
+            return;
+        }
+        $config_tags = $config[ 'tags' ];
+        if ( !is_array( $config_tags ) ) {
+            return;
+        }
         $plugin_key = $config[ 'plugin_key' ];
-        if ( isset( $config[ 'tags' ] ) ) {
-            $config_tags = $config[ 'tags' ];
-            if ( is_array( $config_tags ) ) {
-                foreach ( $config_tags as $kind => $tags ) {
-                    if ( is_array( $tags ) ) {
-                        foreach ( $tags as $tag => $funk ) {
-                            $tag = strtolower( $tag );
-                            if ( strpos( $funk, '::' ) !== FALSE ) {
-                                $path = explode( '::', $funk );
-                                $funk = end( $path );
-                            }
-                            if ( $kind === 'block' ) {
-                                $tag = rtrim( $tag, '?' );
-                                $blocks[ $tag ] = array( $plugin_key => $funk );
-                            } elseif ( $kind === 'function' ) {
-                                $functions[ $tag ] = array( $plugin_key => $funk );
-                            } elseif ( $kind === 'modifier' ) {
-                                $modifiers[ $tag ] = array( $plugin_key => $funk );
-                            }
-                        }
-                    }
+        foreach ( $config_tags as $kind => $tags ) {
+            if ( !is_array( $tags ) ) {
+                continue;
+            }
+            if ( $kind === 'block' ) {
+                foreach ( $tags as $tag => $hdlr ) {
+                    $tag = rtrim( $tag, '?' );
+                    $tag = strtolower( $tag );
+                    $hdlr = preg_replace('/\A.*::/', '', $hdlr);
+                    $blocks[ $tag ] = array( $plugin_key => $hdlr );
+                }
+            } elseif ( $kind === 'function' ) {
+                foreach ( $tags as $tag => $hdlr ) {
+                    $tag = strtolower( $tag );
+                    $hdlr = preg_replace('/\A.*::/', '', $hdlr);
+                    $functions[ $tag ] = array( $plugin_key => $hdlr );
+                }
+            } elseif ( $kind === 'modifier' ) {
+                foreach ( $tags as $tag => $hdlr ) {
+                    $tag = strtolower( $tag );
+                    $hdlr = preg_replace('/\A.*::/', '', $hdlr);
+                    $modifiers[ $tag ] = array( $plugin_key => $hdlr );
                 }
             }
         }
