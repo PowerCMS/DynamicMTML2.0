@@ -18,7 +18,8 @@ class DynamicMTML_pack extends MTPlugin {
             'AllowMagicQuotesGPC' => array( 'default' => 0 ),
             'DynamicPHPFirst' => array( 'default' => 0 ),
             'DynamicAllowPHPinTemplate' => array( 'default' => 1 ),
-            'DynamicGenerateDirectories' => array( 'default' => 1 ),
+            // 'PermCheckAtPreview' => array( 'default' => 0 ),
+            // 'AllowableTags' => array( 'default' => '<a><br><b><i><p><strong><em><img><ul><ol><li><blockquote><pre>' ),
             'DynamicCacheDriver' => array( 'default' => '' ),
             'DynamicCachePrefix' => array( 'default' => 'dynamicmtmlcache' ),
             'DynamicCacheTTL' => array( 'default' => 7200 ),
@@ -27,18 +28,19 @@ class DynamicMTML_pack extends MTPlugin {
             'DynamicMemcachedServers' => array( 'default' => '' ),
             'DynamicMemcachedCompressed' => array( 'default' => '' ),
             'DynamicLoadYAML' => array( 'default' => '' ),
-            'DynamicContent2gzip' => array( 'default' => 0 ),
-            'DataAPIScript' => array( 'default' => 'mt-data-api.cgi' ),
+            'DynamicContent2gzip' => array( 'default' => '' ),
             'DataAPIVersion' => array( 'default' => 'v1' ),
             'DataAPIURL' => array( 'default' => '' ),
             'DeleteFileAtPreview' => array( 'default' => 1 ),
             'PreviewServers' => array( 'default' => '' ),
             'DynamicWorkerExpiration' => array( 'default' => 300 ),
-            'DynamicInitPluginsLater' => array( 'default' => 0 ),
             'PHPPearDir' => array( 'default' => '' ),
-            'DynamicMTMLLicense' => array( 'default' => 'Commercial' ),
+            'DynamicInitPluginsLater' => array( 'default' => '' ),
             'SmartphonePreviewAgent'
                 => array( 'default' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 5_1 like Mac OS X)' ),
+            'DynamicMTMLLicense' => array( 'default' => 'GPL' ),
+            'DynamicGenerateDirectories' => array( 'default' => 1 ),
+            'DataAPIScript' => array( 'default' => 'mt-data-api.cgi' ),
         ),
         'settings' => array( // PluginSettings
             'example_setting' => array( 'default' => 1 ),
@@ -646,7 +648,7 @@ class DynamicMTML_pack extends MTPlugin {
         require_once( $this->tags_dir() . 'modifier.trimwhitespace.php' );
         return smarty_modifier_trimwhitespace( $text, $arg );
     }
-    
+
     function highlightingsearchword ( $text, $arg ) {
         require_once( $this->tags_dir() . 'modifier.highlightingsearchword.php' );
         return smarty_modifier_highlightingsearchword( $text, $arg );
